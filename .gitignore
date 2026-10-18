@@ -39,11 +39,10 @@ ffmpeg.exe
 *.zip
 *.tar.gz
 
-# Node / Remotion / Manim
+# Node / Manim
 node_modules/
-remotion-motion/node_modules/
-remotion-motion/out/
 manim-motion/media/
+test_media_workspace/
 
 # IDE / System
 .vscode/
