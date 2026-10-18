@@ -5,6 +5,7 @@ Run via: python gui.py
 
 import os
 import sys
+import subprocess
 import threading
 from tkinter import filedialog, messagebox
 import customtkinter as ctk
