@@ -1,0 +1,12 @@
+@echo off
+chcp 65001 > nul
+echo ==================================================
+echo   AI Thai Subtitle Generator (Web App)
+echo   กำลังเริ่มต้นโปรแกรมและเปิดเบราว์เซอร์...
+echo ==================================================
+if exist "%~dp0dist\ThaiSubtitles\ThaiSubtitles-Web.exe" (
+    "%~dp0dist\ThaiSubtitles\ThaiSubtitles-Web.exe" %*
+    exit /b
+)
+python app.py %*
+pause
