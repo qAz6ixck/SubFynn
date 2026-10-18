@@ -39,9 +39,8 @@ ffmpeg.exe
 *.zip
 *.tar.gz
 
-# Node / Manim
+# Dependencies & temporary workspace
 node_modules/
-manim-motion/media/
 test_media_workspace/
 
 # IDE / System
