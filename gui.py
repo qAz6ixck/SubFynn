@@ -34,21 +34,26 @@ ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
 # ==========================================
-# Glassmorphism Dark & Crisp White Palette
-# Pure pitch black, frosted acrylic & crisp white borders
+# Liquid Glassmorphism Palette (Deep Obsidian & Glowing Accents)
 # ==========================================
-COLOR_BG = "#000000"                  # Pure pitch black
-COLOR_GLASS_CARD = "#12121c"          # Translucent dark frosted glass card
-COLOR_GLASS_BORDER = "#ffffff"        # Crisp pure white border line
-COLOR_GLASS_BORDER_SUBTLE = "#ffffff" # Crisp pure white border line
-COLOR_INPUT_BG = "#08080f"            # Deep recessed input field
-COLOR_DROPDOWN_BG = "#141420"         # Dropdown pill background
-COLOR_DROPDOWN_HOVER = "#242436"      # Dropdown hover
-COLOR_TEXT_WHITE = "#ffffff"          # Crisp pure white text
-COLOR_TEXT_MUTED = "#f8fafc"          # Crisp bright white text
-COLOR_TEXT_DIM = "#cbd5e1"            # Subtle secondary white text
-COLOR_ACCENT_WHITE = "#ffffff"        # High-contrast white accent button
-COLOR_ACCENT_HOVER = "#e2e8f0"        # Hover for white button
+COLOR_BG = "#080C17"                  # Deep Obsidian Indigo
+COLOR_GLASS_CARD = "#10172A"          # Translucent Dark Indigo Frosted Glass
+COLOR_GLASS_BORDER = "#283556"        # Specular border
+COLOR_GLASS_BORDER_TOP = "#4F659B"    # Specular top highlight
+COLOR_INPUT_BG = "#0A0F1D"            # Deep recessed input field
+COLOR_DROPDOWN_BG = "#131C31"         # Dropdown pill background
+COLOR_DROPDOWN_HOVER = "#1E2A47"      # Dropdown hover
+COLOR_TEXT_WHITE = "#F8FAFC"          # Crisp bright white text
+COLOR_TEXT_MUTED = "#94A3B8"          # Secondary muted text
+COLOR_TEXT_DIM = "#64748B"            # Subtle secondary text
+COLOR_ACCENT_INDIGO = "#6366F1"       # Electric Indigo primary
+COLOR_ACCENT_INDIGO_HOVER = "#818CF8" # Indigo hover
+COLOR_ACCENT_PINK = "#EC4899"         # Vivid Pink (Burn action)
+COLOR_ACCENT_PINK_HOVER = "#F472B6"   # Pink hover
+COLOR_ACCENT_CYAN = "#38BDF8"         # Cyan highlight
+COLOR_ACCENT_CYAN_BG = "#112236"      # Cyan badge background
+COLOR_ACCENT_EMERALD = "#10B981"      # Emerald success
+COLOR_ACCENT_EMERALD_BG = "#06281E"   # Emerald background
 
 from typing import Optional
 
@@ -66,9 +71,9 @@ class ThaiSubtitleApp(ctk.CTk):
         try:
             import pywinstyles
             pywinstyles.apply_style(self, "acrylic")
-            pywinstyles.change_border_color(self, "#ffffff")
-            pywinstyles.change_header_color(self, "#000000")
-            pywinstyles.change_title_color(self, "#ffffff")
+            pywinstyles.change_border_color(self, COLOR_GLASS_BORDER)
+            pywinstyles.change_header_color(self, COLOR_BG)
+            pywinstyles.change_title_color(self, COLOR_TEXT_WHITE)
         except Exception:
             pass
 
@@ -92,7 +97,7 @@ class ThaiSubtitleApp(ctk.CTk):
             self.load_video(initial_video)
 
     def _build_ui(self):
-        # 1. Header Glass Card (Ultra-Rounded Pill Card)
+        # 1. Header Glass Card
         header_frame = ctk.CTkFrame(
             self,
             corner_radius=22,
@@ -118,8 +123,8 @@ class ThaiSubtitleApp(ctk.CTk):
             text="🌐 เปิดโหมด Web App",
             font=ctk.CTkFont(size=12, weight="bold"),
             corner_radius=14,
-            fg_color="#181826",
-            hover_color="#242436",
+            fg_color="#182238",
+            hover_color="#243354",
             border_width=1.5,
             border_color=COLOR_GLASS_BORDER,
             text_color=COLOR_TEXT_WHITE,
@@ -130,13 +135,13 @@ class ThaiSubtitleApp(ctk.CTk):
 
         badge_lbl = ctk.CTkLabel(
             top_header_bar,
-            text="💎 SubFynn Glass Edition",
-            font=ctk.CTkFont(size=12, weight="bold"),
-            text_color=COLOR_TEXT_WHITE,
-            fg_color="#181826",
-            corner_radius=14,
-            padx=14,
-            pady=6,
+            text="  💎 GLASS STUDIO  ",
+            font=ctk.CTkFont(size=11, weight="bold"),
+            text_color=COLOR_ACCENT_CYAN,
+            fg_color=COLOR_ACCENT_CYAN_BG,
+            corner_radius=12,
+            padx=12,
+            pady=4,
         )
         badge_lbl.pack(side="right")
 
@@ -178,7 +183,7 @@ class ThaiSubtitleApp(ctk.CTk):
             border_width=1.5,
             border_color=COLOR_GLASS_BORDER,
             text_color=COLOR_TEXT_WHITE,
-            placeholder_text_color="#94a3b8",
+            placeholder_text_color="#64748B",
             height=38,
         )
         self.file_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
@@ -189,11 +194,11 @@ class ThaiSubtitleApp(ctk.CTk):
             width=120,
             height=38,
             corner_radius=14,
-            fg_color=COLOR_ACCENT_WHITE,
-            hover_color=COLOR_ACCENT_HOVER,
-            text_color="#000000",
+            fg_color="#253556",
+            hover_color="#364B7A",
+            text_color=COLOR_TEXT_WHITE,
             border_width=1.5,
-            border_color=COLOR_GLASS_BORDER,
+            border_color=COLOR_GLASS_BORDER_TOP,
             font=ctk.CTkFont(size=13, weight="bold"),
             command=self.browse_video,
         )
@@ -230,12 +235,12 @@ class ThaiSubtitleApp(ctk.CTk):
             corner_radius=14,
             height=34,
             fg_color=COLOR_DROPDOWN_BG,
-            button_color="#1c1c28",
+            button_color="#1C2744",
             button_hover_color=COLOR_DROPDOWN_HOVER,
             text_color=COLOR_TEXT_WHITE,
-            dropdown_fg_color="#08080e",
+            dropdown_fg_color="#0A0F1D",
             dropdown_text_color=COLOR_TEXT_WHITE,
-            dropdown_hover_color="#242436",
+            dropdown_hover_color="#1E2A47",
         )
         self.model_menu.pack(fill="x", pady=(4, 0))
 
@@ -252,19 +257,19 @@ class ThaiSubtitleApp(ctk.CTk):
                 "jav_hardcore (หนังผู้ใหญ่ 18+ Hardcore ดิบเถื่อน หยาบคายขั้นสุด)",
                 "jav_sweet (หนังผู้ใหญ่ 18+ สายหวานอ้อน)",
                 "general (ทั่วไป / ภาพยนตร์)",
-                "anime (อนิเมะ / การ์ตตอน)",
+                "anime (อนิเมะ / การ์ตูน)",
                 "drama (ดราม่า / ซีรีส์)",
             ],
             variable=self.style_var,
             corner_radius=14,
             height=34,
             fg_color=COLOR_DROPDOWN_BG,
-            button_color="#1c1c28",
+            button_color="#1C2744",
             button_hover_color=COLOR_DROPDOWN_HOVER,
             text_color=COLOR_TEXT_WHITE,
-            dropdown_fg_color="#08080e",
+            dropdown_fg_color="#0A0F1D",
             dropdown_text_color=COLOR_TEXT_WHITE,
-            dropdown_hover_color="#242436",
+            dropdown_hover_color="#1E2A47",
         )
         self.style_menu.pack(fill="x", pady=(4, 0))
 
@@ -290,12 +295,12 @@ class ThaiSubtitleApp(ctk.CTk):
             corner_radius=14,
             height=34,
             fg_color=COLOR_DROPDOWN_BG,
-            button_color="#1c1c28",
+            button_color="#1C2744",
             button_hover_color=COLOR_DROPDOWN_HOVER,
             text_color=COLOR_TEXT_WHITE,
-            dropdown_fg_color="#08080e",
+            dropdown_fg_color="#0A0F1D",
             dropdown_text_color=COLOR_TEXT_WHITE,
-            dropdown_hover_color="#242436",
+            dropdown_hover_color="#1E2A47",
         )
         self.lang_menu.pack(fill="x", pady=(4, 0))
 
@@ -319,12 +324,12 @@ class ThaiSubtitleApp(ctk.CTk):
             corner_radius=14,
             height=34,
             fg_color=COLOR_DROPDOWN_BG,
-            button_color="#1c1c28",
+            button_color="#1C2744",
             button_hover_color=COLOR_DROPDOWN_HOVER,
             text_color=COLOR_TEXT_WHITE,
-            dropdown_fg_color="#08080e",
+            dropdown_fg_color="#0A0F1D",
             dropdown_text_color=COLOR_TEXT_WHITE,
-            dropdown_hover_color="#242436",
+            dropdown_hover_color="#1E2A47",
         )
         self.gemini_model_menu.pack(fill="x", pady=(4, 0))
 
@@ -344,7 +349,7 @@ class ThaiSubtitleApp(ctk.CTk):
             border_width=1.5,
             border_color=COLOR_GLASS_BORDER,
             text_color=COLOR_TEXT_WHITE,
-            placeholder_text_color="#94a3b8",
+            placeholder_text_color="#64748B",
             height=34,
         )
         self.gemini_entry.pack(fill="x", pady=(4, 0))
@@ -366,12 +371,12 @@ class ThaiSubtitleApp(ctk.CTk):
             corner_radius=14,
             height=34,
             fg_color=COLOR_DROPDOWN_BG,
-            button_color="#1c1c28",
+            button_color="#1C2744",
             button_hover_color=COLOR_DROPDOWN_HOVER,
             text_color=COLOR_TEXT_WHITE,
-            dropdown_fg_color="#08080e",
+            dropdown_fg_color="#0A0F1D",
             dropdown_text_color=COLOR_TEXT_WHITE,
-            dropdown_hover_color="#242436",
+            dropdown_hover_color="#1E2A47",
         )
         self.embed_mode_menu.pack(fill="x", pady=(4, 0))
 
@@ -379,9 +384,9 @@ class ThaiSubtitleApp(ctk.CTk):
         jav_notice_frame = ctk.CTkFrame(
             opts_frame,
             corner_radius=14,
-            fg_color="#180e14",
+            fg_color="#1E1224",
             border_width=1.5,
-            border_color=COLOR_GLASS_BORDER,
+            border_color="#581C87",
         )
         jav_notice_frame.pack(fill="x", padx=16, pady=(4, 12))
 
@@ -389,7 +394,7 @@ class ThaiSubtitleApp(ctk.CTk):
             jav_notice_frame,
             text="🔞 โหมดแปล JAV / หนังผู้ใหญ่ 18+: แปลได้อารมณ์เสียว ฟิน เป็นธรรมชาติ พร้อมตัดเสียงครางวนซ้ำ",
             font=ctk.CTkFont(size=12, weight="bold"),
-            text_color="#ffffff",
+            text_color="#F472B6",
         )
         jav_notice.pack(padx=14, pady=6, anchor="w")
 
@@ -409,11 +414,11 @@ class ThaiSubtitleApp(ctk.CTk):
             font=ctk.CTkFont(size=15, weight="bold"),
             height=46,
             corner_radius=16,
-            fg_color=COLOR_ACCENT_WHITE,
-            hover_color=COLOR_ACCENT_HOVER,
-            text_color="#000000",
-            border_width=2,
-            border_color=COLOR_GLASS_BORDER,
+            fg_color=COLOR_ACCENT_INDIGO,
+            hover_color=COLOR_ACCENT_INDIGO_HOVER,
+            text_color="#FFFFFF",
+            border_width=1.5,
+            border_color="#818CF8",
             command=self.start_processing,
         )
         self.start_btn.pack(fill="x", padx=18, pady=(14, 8))
@@ -422,8 +427,8 @@ class ThaiSubtitleApp(ctk.CTk):
             action_frame,
             corner_radius=6,
             height=8,
-            fg_color="#181824",
-            progress_color=COLOR_ACCENT_WHITE,
+            fg_color="#0D1322",
+            progress_color=COLOR_ACCENT_CYAN,
         )
         self.progress_bar.pack(fill="x", padx=18, pady=(0, 6))
         self.progress_bar.set(0)
@@ -463,8 +468,8 @@ class ThaiSubtitleApp(ctk.CTk):
             height=28,
             corner_radius=12,
             font=ctk.CTkFont(size=11, weight="bold"),
-            fg_color="#14141e",
-            hover_color="#242436",
+            fg_color="#182238",
+            hover_color="#243354",
             border_width=1.5,
             border_color=COLOR_GLASS_BORDER,
             text_color=COLOR_TEXT_WHITE,
@@ -480,8 +485,8 @@ class ThaiSubtitleApp(ctk.CTk):
             height=28,
             corner_radius=12,
             font=ctk.CTkFont(size=11, weight="bold"),
-            fg_color="#14141e",
-            hover_color="#242436",
+            fg_color="#182238",
+            hover_color="#243354",
             border_width=1.5,
             border_color=COLOR_GLASS_BORDER,
             text_color=COLOR_TEXT_WHITE,
@@ -497,11 +502,11 @@ class ThaiSubtitleApp(ctk.CTk):
             fg_color=COLOR_INPUT_BG,
             border_width=1.5,
             border_color=COLOR_GLASS_BORDER,
-            text_color="#ffffff",
+            text_color="#F8FAFC",
         )
         self.srt_textbox.pack(fill="both", expand=True, padx=18, pady=(0, 10))
 
-        # Export Buttons Row (Pill-shaped)
+        # Export Buttons Row
         export_box = ctk.CTkFrame(out_frame, fg_color="transparent")
         export_box.pack(fill="x", padx=18, pady=(0, 14))
 
@@ -513,8 +518,8 @@ class ThaiSubtitleApp(ctk.CTk):
             width=170,
             height=36,
             corner_radius=14,
-            fg_color="#14141e",
-            hover_color="#242436",
+            fg_color="#182238",
+            hover_color="#243354",
             border_width=1.5,
             border_color=COLOR_GLASS_BORDER,
             text_color=COLOR_TEXT_WHITE,
@@ -527,11 +532,11 @@ class ThaiSubtitleApp(ctk.CTk):
             text="🎬 ฝังซับลงวิดีโอ (Burn-in MP4)",
             command=self.burn_video,
             state="disabled",
-            fg_color=COLOR_ACCENT_WHITE,
-            hover_color=COLOR_ACCENT_HOVER,
-            border_width=2,
-            border_color=COLOR_GLASS_BORDER,
-            text_color="#000000",
+            fg_color=COLOR_ACCENT_PINK,
+            hover_color=COLOR_ACCENT_PINK_HOVER,
+            border_width=1.5,
+            border_color="#F472B6",
+            text_color="#FFFFFF",
             font=ctk.CTkFont(size=12, weight="bold"),
             width=210,
             height=36,
@@ -544,11 +549,11 @@ class ThaiSubtitleApp(ctk.CTk):
             text="📂 เปิดโฟลเดอร์ผลลัพธ์",
             command=self.open_output_folder,
             state="disabled",
-            fg_color="#14141e",
-            hover_color="#242436",
+            fg_color=COLOR_ACCENT_EMERALD_BG,
+            hover_color="#0E3D2E",
             border_width=1.5,
-            border_color=COLOR_GLASS_BORDER,
-            text_color=COLOR_TEXT_WHITE,
+            border_color=COLOR_ACCENT_EMERALD,
+            text_color="#34D399",
             font=ctk.CTkFont(size=12, weight="bold"),
             width=180,
             height=36,

@@ -159,42 +159,43 @@ INDEX_HTML = """<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SubFynn - โปรแกรมสร้างซับไทยอัตโนมัติ (AI Thai Subtitle Generator)</title>
+    <title>SubFynn Studio — โปรแกรมสร้างซับไทยอัตโนมัติ (AI Thai Subtitle Generator)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-base: #070710;
-            --glass-bg: rgba(255, 255, 255, 0.08);
-            --glass-bg-hover: rgba(255, 255, 255, 0.12);
-            --glass-border: 1px solid rgba(255, 255, 255, 0.18);
+            --bg-deep: #060913;
+            --glass-surface: rgba(255, 255, 255, 0.06);
+            --glass-surface-hover: rgba(255, 255, 255, 0.10);
+            --glass-surface-active: rgba(255, 255, 255, 0.14);
+            --glass-border: rgba(255, 255, 255, 0.13);
             --glass-border-hover: rgba(255, 255, 255, 0.28);
-            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
-            --glass-shadow-hover: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
-            --radius-glass: 16px;
-            --radius-input: 12px;
-            --radius-pill: 9999px;
-            
+            --glass-highlight: rgba(255, 255, 255, 0.30);
+            --accent-indigo: #6366f1;
+            --accent-pink: #ec4899;
+            --accent-cyan: #06b6d4;
+            --accent-emerald: #10b981;
             --text-heading: #FFFFFF;
-            --text-body: rgba(255, 255, 255, 0.8);
-            --text-muted: rgba(255, 255, 255, 0.6);
-            --text-faint: rgba(255, 255, 255, 0.4);
-            
-            --accent-white: #FFFFFF;
-            --accent-hover: #f1f5f9;
+            --text-primary: #F8FAFC;
+            --text-body: rgba(255, 255, 255, 0.82);
+            --text-secondary: #94A3B8;
+            --text-muted: rgba(255, 255, 255, 0.60);
+            --radius-card: 24px;
+            --radius-input: 14px;
+            --radius-pill: 9999px;
+            --glass-shadow: 0 24px 60px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.12);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Kanit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: 'Inter', 'IBM Plex Sans Thai', 'Kanit', sans-serif;
         }
 
-        /* 1. Vibrant Dark Mesh Gradient Backdrop */
         body {
-            background-color: var(--bg-base);
+            background-color: var(--bg-deep);
             background-image: 
                 radial-gradient(at 0% 0%, rgba(30, 27, 75, 0.75) 0px, transparent 55%),
                 radial-gradient(at 100% 0%, rgba(59, 7, 100, 0.65) 0px, transparent 50%),
@@ -205,106 +206,222 @@ INDEX_HTML = """<!DOCTYPE html>
             background-size: cover;
             color: var(--text-body);
             min-height: 100vh;
-            padding: 32px 20px;
+            overflow-x: hidden;
             position: relative;
+            padding: 30px 20px 60px;
         }
 
-        .container {
-            max-width: 1120px;
+        /* 1. Ambient Floating Canvas Orbs */
+        .ambient-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(110px);
+            opacity: 0.55;
+            animation: floatOrb 18s ease-in-out infinite alternate;
+        }
+
+        .orb-1 {
+            width: 540px;
+            height: 540px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.7), transparent 70%);
+            top: -100px;
+            left: -100px;
+        }
+
+        .orb-2 {
+            width: 480px;
+            height: 480px;
+            background: radial-gradient(circle, rgba(236, 72, 153, 0.65), transparent 70%);
+            bottom: -100px;
+            right: -80px;
+            animation-delay: -6s;
+        }
+
+        .orb-3 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.55), transparent 70%);
+            top: 45%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.35;
+            animation-delay: -12s;
+        }
+
+        @keyframes floatOrb {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(45px, -35px) scale(1.08); }
+        }
+
+        /* 2. App Shell & Layout Structure */
+        .app-shell {
+            max-width: 1200px;
             margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
             position: relative;
-            z-index: 2;
+            z-index: 1;
         }
 
-        header {
-            text-align: center;
-            margin-bottom: 32px;
-        }
-
-        h1, h2, h3 {
-            color: var(--text-heading);
-            font-weight: 700;
-        }
-
-        header h1 {
-            font-size: 2.3rem;
-            font-weight: 700;
-            color: var(--text-heading);
-            letter-spacing: -0.5px;
-            margin-bottom: 8px;
-            text-shadow: 0 2px 14px rgba(255, 255, 255, 0.2);
-        }
-
-        header p {
-            color: var(--text-body);
-            font-size: 1.05rem;
-        }
-
-        /* 2. Glass Surface Properties (Cards, Panels) */
-        .card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(16px) saturate(180%);
-            -webkit-backdrop-filter: blur(16px) saturate(180%);
-            border: var(--glass-border);
-            border-radius: var(--radius-glass);
+        /* 3. Glass Panels */
+        .glass-panel {
+            background: var(--glass-surface);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-top: 1px solid var(--glass-highlight);
+            border-left: 1px solid var(--glass-highlight);
+            border-radius: var(--radius-card);
             box-shadow: var(--glass-shadow);
-            padding: 28px;
-            margin-bottom: 24px;
-            transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+            padding: 30px;
+            transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
-        .card:hover {
+        .glass-panel:hover {
             border-color: var(--glass-border-hover);
-            box-shadow: var(--glass-shadow-hover);
         }
 
-        /* Frosted Upload Zone with Specular Border & GPU-friendly alpha */
-        .upload-zone {
-            border: 1.5px dashed rgba(255, 255, 255, 0.35);
-            border-radius: var(--radius-glass);
+        /* 4. Glass Navigation Bar */
+        .glass-navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 30px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .brand-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .brand-logo {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--accent-indigo), var(--accent-pink));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.3rem;
+            color: #ffffff;
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .brand-title {
+            font-size: 1.45rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(to right, #ffffff, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .nav-status-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .status-pill {
+            padding: 6px 16px;
+            border-radius: var(--radius-pill);
+            font-size: 0.82rem;
+            font-weight: 600;
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(52, 211, 153, 0.35);
+            box-shadow: 0 2px 10px rgba(16, 185, 129, 0.2);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .edition-badge {
+            padding: 6px 16px;
+            border-radius: var(--radius-pill);
+            font-size: 0.82rem;
+            font-weight: 600;
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            box-shadow: 0 2px 10px rgba(56, 189, 248, 0.2);
+        }
+
+        /* 5. Dropzone Glass */
+        .dropzone-glass {
+            border: 2px dashed rgba(255, 255, 255, 0.25);
+            border-radius: 20px;
             padding: 42px 24px;
             text-align: center;
+            background: rgba(15, 23, 42, 0.40);
             cursor: pointer;
             transition: all 0.25s ease;
-            background: rgba(255, 255, 255, 0.04);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
 
-        .upload-zone:hover, .upload-zone.dragover {
-            border-color: #ffffff;
-            background: rgba(255, 255, 255, 0.08);
-            box-shadow: 0 0 24px rgba(255, 255, 255, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+        .dropzone-glass:hover, .dropzone-glass.dragover {
+            border-color: var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.08);
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
 
         .upload-icon {
-            font-size: 48px;
+            font-size: 46px;
             margin-bottom: 12px;
             display: inline-block;
-            filter: drop-shadow(0 2px 8px rgba(255, 255, 255, 0.25));
+            filter: drop-shadow(0 4px 12px rgba(99, 102, 241, 0.4));
         }
 
-        .upload-zone h3 {
+        .dropzone-glass h3 {
             color: var(--text-heading);
-            font-size: 1.2rem;
+            font-size: 1.25rem;
             font-weight: 600;
+            margin-bottom: 6px;
         }
 
         .file-info {
             margin-top: 16px;
             font-weight: 600;
-            color: #ffffff;
-            background: rgba(255, 255, 255, 0.14);
-            display: inline-block;
-            padding: 6px 18px;
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.15);
+            display: none;
+            padding: 8px 22px;
             border-radius: var(--radius-pill);
-            border: 1px solid rgba(255, 255, 255, 0.28);
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            font-size: 0.95rem;
         }
 
+        .file-info:not(:empty) {
+            display: inline-block;
+        }
+
+        /* 6. Form Controls & Grid */
         .options-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 18px;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
             margin-top: 24px;
         }
 
@@ -315,43 +432,56 @@ INDEX_HTML = """<!DOCTYPE html>
         }
 
         label {
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             font-weight: 500;
-            color: var(--text-body);
+            color: var(--text-secondary);
         }
 
-        /* 3. Readability & Contrast: Form Controls */
         select, input[type="text"], input[type="password"] {
-            background-color: rgba(255, 255, 255, 0.06);
-            border: var(--glass-border);
-            color: var(--text-heading);
-            padding: 12px 16px;
+            width: 100%;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
             border-radius: var(--radius-input);
+            padding: 13px 16px;
+            color: var(--text-heading);
             font-size: 0.95rem;
             outline: none;
             transition: all 0.2s ease;
-            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
         }
 
         select:focus, input:focus {
-            border-color: #ffffff;
-            background-color: rgba(255, 255, 255, 0.12);
-            box-shadow: 0 0 0 1px #ffffff, 0 0 16px rgba(255, 255, 255, 0.25);
+            border-color: var(--accent-indigo);
+            background: rgba(15, 23, 42, 0.85);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3), 0 0 18px rgba(99, 102, 241, 0.25);
         }
 
         select option {
             background-color: #0f172a;
             color: #ffffff;
+            padding: 8px;
         }
 
-        /* High-Contrast Action Buttons */
+        /* 7. JAV 18+ Special Glass Banner */
+        .banner-jav-glass {
+            background: rgba(244, 63, 94, 0.12);
+            border: 1px solid rgba(244, 63, 94, 0.32);
+            border-radius: 18px;
+            padding: 16px 22px;
+            margin-top: 22px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 8px 24px rgba(244, 63, 94, 0.15);
+        }
+
+        /* 8. Glowing Action Buttons */
         .btn {
-            background-color: var(--accent-white);
-            color: #05050a;
-            border: 1px solid #ffffff;
-            padding: 12px 26px;
+            padding: 12px 24px;
             font-size: 0.98rem;
-            font-weight: 700;
+            font-weight: 600;
             border-radius: var(--radius-input);
             cursor: pointer;
             display: inline-flex;
@@ -359,45 +489,70 @@ INDEX_HTML = """<!DOCTYPE html>
             justify-content: center;
             gap: 8px;
             transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+            text-decoration: none;
+            border: 1px solid transparent;
         }
 
-        .btn:hover:not(:disabled) {
-            background-color: var(--accent-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
+        .btn-glass-primary {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.95), rgba(236, 72, 153, 0.95));
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 16px;
+            padding: 15px 36px;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 1.05rem;
+            cursor: pointer;
+            box-shadow: 0 12px 28px -6px rgba(99, 102, 241, 0.6);
+            transition: all 0.25s ease;
         }
 
-        .btn:active:not(:disabled) {
-            transform: translateY(0);
+        .btn-glass-primary:hover:not(:disabled) {
+            transform: translateY(-2px) scale(1.01);
+            box-shadow: 0 18px 38px -6px rgba(236, 72, 153, 0.75);
+            border-color: rgba(255, 255, 255, 0.55);
         }
 
-        .btn:disabled {
-            opacity: 0.35;
+        .btn-glass-primary:disabled {
+            opacity: 0.40;
             cursor: not-allowed;
+            transform: none;
             box-shadow: none;
         }
 
-        .btn-success {
-            background-color: #ffffff;
-            color: #05050a;
-            border: 1px solid #ffffff;
+        .btn-emerald {
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: #ffffff;
+            border: 1px solid rgba(52, 211, 153, 0.4);
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
         }
 
-        .btn-success:hover:not(:disabled) {
-            background-color: var(--accent-hover);
+        .btn-emerald:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(16, 185, 129, 0.6);
+        }
+
+        .btn-violet {
+            background: linear-gradient(135deg, #7c3aed, #ec4899);
+            color: #ffffff;
+            border: 1px solid rgba(236, 72, 153, 0.4);
+            box-shadow: 0 8px 24px rgba(236, 72, 153, 0.35);
+        }
+
+        .btn-violet:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(236, 72, 153, 0.55);
         }
 
         .btn-secondary {
-            background-color: rgba(255, 255, 255, 0.08);
-            color: var(--text-heading);
-            border: var(--glass-border);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
         }
 
         .btn-secondary:hover:not(:disabled) {
-            background-color: rgba(255, 255, 255, 0.16);
-            border-color: #ffffff;
+            background: rgba(255, 255, 255, 0.16);
+            border-color: rgba(255, 255, 255, 0.35);
             transform: translateY(-1px);
         }
 
@@ -408,49 +563,50 @@ INDEX_HTML = """<!DOCTYPE html>
         }
 
         .btn-danger {
-            background-color: rgba(239, 68, 68, 0.2);
+            background: rgba(239, 68, 68, 0.2);
             color: #fecaca;
             border: 1px solid rgba(239, 68, 68, 0.45);
-            border-radius: var(--radius-input);
         }
 
         .btn-danger:hover:not(:disabled) {
-            background-color: rgba(239, 68, 68, 0.35);
+            background: rgba(239, 68, 68, 0.35);
             color: #ffffff;
             border-color: #ef4444;
         }
 
-        /* Progress Bar */
+        /* 9. Glowing Gradient Progress Bar */
         .progress-box {
             display: none;
-            margin-top: 22px;
+            margin-top: 24px;
         }
 
         .progress-bar-bg {
             background: rgba(15, 23, 42, 0.7);
             border-radius: var(--radius-pill);
-            height: 10px;
+            height: 12px;
             overflow: hidden;
             margin-bottom: 10px;
-            border: var(--glass-border);
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.6);
         }
 
         .progress-bar-fill {
-            background: #ffffff;
-            box-shadow: 0 0 12px rgba(255, 255, 255, 0.7);
+            background: linear-gradient(90deg, var(--accent-indigo), var(--accent-pink), var(--accent-cyan));
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.8);
             width: 0%;
             height: 100%;
-            transition: width 0.3s ease;
+            transition: width 0.35s ease;
             border-radius: var(--radius-pill);
         }
 
         .progress-status {
-            font-size: 0.92rem;
+            font-size: 0.94rem;
             color: var(--text-body);
             text-align: center;
+            font-weight: 500;
         }
 
+        /* 10. Result Section & Subtitle Editor */
         .result-section {
             display: none;
         }
@@ -458,10 +614,10 @@ INDEX_HTML = """<!DOCTYPE html>
         .preview-layout {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 22px;
+            gap: 24px;
         }
 
-        @media (min-width: 900px) {
+        @media (min-width: 920px) {
             .preview-layout {
                 grid-template-columns: 1.15fr 1fr;
             }
@@ -469,75 +625,18 @@ INDEX_HTML = """<!DOCTYPE html>
 
         .video-container {
             width: 100%;
-            background: #000;
-            border-radius: var(--radius-glass);
+            background: #000000;
+            border-radius: 20px;
             overflow: hidden;
             position: relative;
-            border: var(--glass-border);
-            box-shadow: var(--glass-shadow);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
         }
 
         video {
             width: 100%;
             display: block;
-            max-height: 440px;
-        }
-
-        /* 4. GPU Optimization: Flat alpha inside container, no nested backdrop-filters */
-        .subtitles-editor {
-            max-height: 480px;
-            overflow-y: auto;
-            border: var(--glass-border);
-            border-radius: var(--radius-glass);
-            background: rgba(10, 10, 20, 0.65);
-            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
-        }
-
-        .sub-row {
-            padding: 12px 16px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            cursor: pointer;
-            transition: background 0.15s, border-left 0.15s;
-        }
-
-        .sub-row:hover {
-            background: rgba(255, 255, 255, 0.06);
-        }
-
-        .sub-row.active {
-            background: rgba(255, 255, 255, 0.12) !important;
-            border-left: 4px solid #ffffff;
-        }
-
-        .sub-time {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.82rem;
-            color: #ffffff;
-            font-weight: 600;
-        }
-
-        .sub-text-orig {
-            font-size: 0.84rem;
-            color: var(--text-muted);
-        }
-
-        .sub-text-thai {
-            font-size: 0.98rem;
-            color: var(--text-heading);
-            width: 100%;
-            background: transparent;
-            border: 1px solid transparent;
-            border-radius: 8px;
-            padding: 6px 8px;
-        }
-
-        .sub-text-thai:focus {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.4);
-            outline: none;
+            max-height: 460px;
         }
 
         .tools-panel {
@@ -546,12 +645,11 @@ INDEX_HTML = """<!DOCTYPE html>
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 10px;
-            margin-bottom: 12px;
-            padding: 10px 18px;
-            background: var(--glass-bg);
-            border: var(--glass-border);
-            border-radius: var(--radius-glass);
-            box-shadow: var(--glass-shadow);
+            margin-bottom: 14px;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
         }
 
         .shift-tools {
@@ -561,29 +659,113 @@ INDEX_HTML = """<!DOCTYPE html>
             flex-wrap: wrap;
         }
 
+        .subtitles-editor {
+            max-height: 480px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            background: rgba(10, 15, 28, 0.75);
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .sub-row {
+            padding: 12px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.035);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .sub-row:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.20);
+        }
+
+        .sub-row.active {
+            background: rgba(99, 102, 241, 0.18) !important;
+            border-color: rgba(99, 102, 241, 0.5) !important;
+            border-left: 4px solid var(--accent-indigo) !important;
+        }
+
+        .sub-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            padding: 3px 10px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .sub-text-orig {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .sub-text-thai {
+            font-size: 0.98rem;
+            color: var(--text-heading);
+            width: 100%;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            padding: 8px 12px;
+        }
+
+        .sub-text-thai:focus {
+            background: rgba(15, 23, 42, 0.9);
+            border-color: var(--accent-indigo);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+        }
+
         .actions-bar {
             display: flex;
             flex-wrap: wrap;
             gap: 12px;
-            margin-top: 22px;
+            margin-top: 24px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div style="display: inline-flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap;">
-                <h1>🎬 SubFynn - โปรแกรมสร้างซับไทยอัตโนมัติ</h1>
-                <span style="background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 9999px; padding: 4px 14px; font-size: 0.82rem; font-weight: 600; color: #ffffff; letter-spacing: 0.5px; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">💎 SubFynn Glass Edition</span>
+    <!-- 1. Ambient Floating Glowing Orbs -->
+    <div class="ambient-canvas">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <div class="app-shell">
+        <!-- 2. Glass Navigation Header -->
+        <header class="glass-panel glass-navbar">
+            <div class="brand-group">
+                <div class="brand-logo">SF</div>
+                <div>
+                    <div class="brand-title">SubFynn Studio</div>
+                    <div class="brand-subtitle">โปรแกรมสร้างซับไทยอัตโนมัติ (AI Thai Subtitle Generator)</div>
+                </div>
             </div>
-            <p>อัปโหลดวิดีโอจากที่ไหนก็ได้ แล้วระบบจะถอดเสียงและแปลซับไทยให้อัตโนมัติ พร้อมฝังซับลงวิดีโอ</p>
+            <div class="nav-status-group">
+                <span class="status-pill">● Engine Ready</span>
+                <span class="edition-badge">💎 Liquid Glass Edition</span>
+            </div>
         </header>
 
-        <div class="card">
-            <div class="upload-zone" id="dropZone" onclick="document.getElementById('videoFile').click()">
+        <!-- 3. Upload & Configuration Glass Panel -->
+        <main class="glass-panel">
+            <div class="dropzone-glass" id="dropZone" onclick="document.getElementById('videoFile').click()">
                 <span class="upload-icon">🎬</span>
                 <h3>ลากไฟล์วิดีโอมาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์</h3>
-                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">รองรับ MP4, MKV, MOV, AVI, WEBM, FLV, TS (สูงสุด 2GB)</p>
+                <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 4px;">รองรับ MP4, MKV, MOV, AVI, WEBM, FLV, TS (สูงสุด 2GB)</p>
                 <div class="file-info" id="fileInfo"></div>
                 <input type="file" id="videoFile" accept="video/*,audio/*" style="display: none;" onchange="handleFileSelect(this.files[0])">
             </div>
@@ -651,16 +833,16 @@ INDEX_HTML = """<!DOCTYPE html>
                 </div>
             </div>
 
-            <div style="background: rgba(244, 63, 94, 0.12); border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 16px; padding: 14px 20px; margin-top: 20px; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);">
-                <span style="font-size: 1.6rem;">🔞</span>
-                <div style="font-size: 0.9rem; line-height: 1.45;">
+            <div class="banner-jav-glass">
+                <span style="font-size: 1.8rem;">🔞</span>
+                <div style="font-size: 0.92rem; line-height: 1.5;">
                     <strong style="color: #ffffff;">โหมดแปล JAV / หนังผู้ใหญ่ 18+ ได้อารมณ์สมจริง:</strong>
-                    <span style="color: rgba(255, 255, 255, 0.8);"> ปรับสำนวนซับไทยให้อินเนอร์มาเต็ม (เสียว, จะเสร็จแล้ว, อย่านะ, มิดด้าม, ควย, หี, แตกใน) พร้อมระบบ Anti-Hallucination ตัดเสียงครางวนซ้ำ และปลดล็อกระบบกรองคำของ Gemini AI</span>
+                    <span style="color: rgba(255, 255, 255, 0.85);"> ปรับสำนวนซับไทยให้อินเนอร์มาเต็ม (เสียว, จะเสร็จแล้ว, อย่านะ, มิดด้าม, ควย, หี, แตกใน) พร้อมระบบ Anti-Hallucination ตัดเสียงครางวนซ้ำ และปลดล็อกระบบกรองคำของ Gemini AI</span>
                 </div>
             </div>
 
-            <div style="margin-top: 24px; text-align: center;">
-                <button class="btn" id="startBtn" onclick="startProcessing()" disabled style="font-size: 1.05rem; padding: 12px 32px;">
+            <div style="margin-top: 28px; text-align: center;">
+                <button class="btn btn-glass-primary" id="startBtn" onclick="startProcessing()" disabled>
                     ✨ เริ่มสร้างซับไทย (Generate Thai Subtitles)
                 </button>
             </div>
@@ -671,10 +853,11 @@ INDEX_HTML = """<!DOCTYPE html>
                 </div>
                 <div class="progress-status" id="progressStatus">กำลังเตรียมการ...</div>
             </div>
-        </div>
+        </main>
 
-        <div class="card result-section" id="resultCard">
-            <h2 style="margin-bottom: 16px; font-size: 1.3rem;">ตัวอย่างวิดีโอและคำบรรยายซับไทย</h2>
+        <!-- 4. Result Preview & Subtitle Editor Glass Panel -->
+        <section class="glass-panel result-section" id="resultCard">
+            <h2 style="margin-bottom: 20px; font-size: 1.35rem; color: #ffffff;">🎬 ตัวอย่างวิดีโอและคำบรรยายซับไทย</h2>
             <div class="preview-layout">
                 <div class="video-container">
                     <video id="videoPlayer" controls playsinline></video>
@@ -682,13 +865,13 @@ INDEX_HTML = """<!DOCTYPE html>
                 <div>
                     <div class="tools-panel">
                         <div class="shift-tools">
-                            <span style="font-size: 0.85rem; color: var(--text-muted);">ปรับเวลา:</span>
+                            <span style="font-size: 0.85rem; color: var(--text-secondary);">ปรับเวลา:</span>
                             <button class="btn btn-secondary btn-sm" onclick="shiftSubtitles(-0.5)" title="เลื่อนซับเร็วขึ้น 0.5 วินาที">⏪ -0.5s</button>
                             <button class="btn btn-secondary btn-sm" onclick="shiftSubtitles(0.5)" title="เลื่อนซับช้าลง 0.5 วินาที">⏩ +0.5s</button>
                             <button class="btn btn-secondary btn-sm" onclick="promptCustomShift()">⏱️ กำหนดเอง...</button>
                         </div>
                         <div style="display: flex; gap: 6px; align-items: center;">
-                            <span id="subCount" style="font-size: 0.85rem; color: var(--primary); font-weight: 600;">0 ท่อน</span>
+                            <span id="subCount" style="font-size: 0.88rem; color: #38bdf8; font-weight: 600;">0 ท่อน</span>
                         </div>
                     </div>
                     <div class="subtitles-editor" id="subEditor"></div>
@@ -696,20 +879,20 @@ INDEX_HTML = """<!DOCTYPE html>
             </div>
 
             <div class="actions-bar">
-                <a class="btn btn-success" id="downloadVideoBtn" href="#" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">🎬 ดาวน์โหลดวิดีโอพร้อมซับ (Subtitled Video MP4)</a>
-                <button class="btn" onclick="downloadSRT()">📥 ดาวน์โหลดไฟล์ .SRT</button>
+                <a class="btn btn-emerald" id="downloadVideoBtn" href="#" style="text-decoration: none;">🎬 ดาวน์โหลดวิดีโอพร้อมซับ (Subtitled Video MP4)</a>
+                <button class="btn btn-secondary" onclick="downloadSRT()">📥 ดาวน์โหลดไฟล์ .SRT</button>
                 <button class="btn btn-secondary" onclick="downloadVTT()">📥 ดาวน์โหลดไฟล์ .VTT</button>
-                <button class="btn btn-secondary" id="burnBtn" onclick="burnSubtitles()">🎬 ฝังซับใหม่ (Custom Burn)</button>
+                <button class="btn btn-violet" id="burnBtn" onclick="burnSubtitles()">🎬 ฝังซับใหม่ (Custom Burn)</button>
                 <button class="btn btn-secondary" onclick="copyAllText()">📋 คัดลอกข้อความทั้งหมด</button>
             </div>
 
-            <div class="progress-box" id="burnProgressBox" style="margin-top: 16px;">
+            <div class="progress-box" id="burnProgressBox" style="margin-top: 18px;">
                 <div class="progress-bar-bg">
                     <div class="progress-bar-fill" id="burnProgressBar" style="width: 100%;"></div>
                 </div>
                 <div class="progress-status" id="burnStatus">กำลังฝังซับไตเติล...</div>
             </div>
-        </div>
+        </section>
     </div>
 
     <script>
