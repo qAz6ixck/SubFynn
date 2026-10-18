@@ -159,7 +159,7 @@ INDEX_HTML = """<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>โปรแกรมสร้างซับไทยอัตโนมัติ (AI Thai Subtitle Generator)</title>
+    <title>SubFynn - โปรแกรมสร้างซับไทยอัตโนมัติ (AI Thai Subtitle Generator)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -572,8 +572,11 @@ INDEX_HTML = """<!DOCTYPE html>
 <body>
     <div class="container">
         <header>
-            <h1>โปรแกรมสร้างซับไทยอัตโนมัติ</h1>
-            <p>อัปโหลดวิดีโอจากที่ไหนก็ได้ แล้วระบบจะถอดเสียงและแปลซับไทยให้ทันที</p>
+            <div style="display: inline-flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap;">
+                <h1>🎬 SubFynn - โปรแกรมสร้างซับไทยอัตโนมัติ</h1>
+                <span style="background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 9999px; padding: 4px 14px; font-size: 0.82rem; font-weight: 600; color: #ffffff; letter-spacing: 0.5px; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">💎 SubFynn Glass Edition</span>
+            </div>
+            <p>อัปโหลดวิดีโอจากที่ไหนก็ได้ แล้วระบบจะถอดเสียงและแปลซับไทยให้อัตโนมัติ พร้อมฝังซับลงวิดีโอ</p>
         </header>
 
         <div class="card">

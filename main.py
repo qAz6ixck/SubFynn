@@ -40,6 +40,15 @@ if sys.stderr and hasattr(sys.stderr, "reconfigure"):
 
 
 def main():
+    if "--web" in sys.argv or "--server" in sys.argv:
+        from app import start_server
+        port = 5000
+        for i, a in enumerate(sys.argv):
+            if a == "--port" and i + 1 < len(sys.argv) and sys.argv[i + 1].isdigit():
+                port = int(sys.argv[i + 1])
+        start_server(port=port, open_browser=True)
+        return
+
     from gui import ThaiSubtitleApp
     args = [a for a in sys.argv[1:] if not a.startswith("-")]
     initial_video = args[0] if args else None

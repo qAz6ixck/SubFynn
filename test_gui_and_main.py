@@ -61,6 +61,23 @@ class TestGuiAndMain(unittest.TestCase):
                     mock_app_class.assert_called_once_with(initial_video="my_movie.mp4")
                     mock_instance.mainloop.assert_called_once()
 
+    def test_main_routing_web_mode(self):
+        import main
+        with patch.object(sys, "argv", ["SubFynn.exe", "--web", "--port", "5010"]):
+            with patch("app.start_server") as mock_start_server:
+                main.main()
+                mock_start_server.assert_called_once_with(port=5010, open_browser=True)
+
+    def test_gui_open_web_mode(self):
+        app = ThaiSubtitleApp()
+        with patch("app.start_server_in_background", return_value=5000) as mock_bg:
+            with patch("webbrowser.open") as mock_open:
+                app.open_web_mode()
+                mock_bg.assert_called_once_with(port=5000)
+                mock_open.assert_called_once_with("http://127.0.0.1:5000")
+                self.assertIn("5000", app.status_lbl.cget("text"))
+        app.destroy()
+
     def test_cli_style_and_model_args(self):
         import cli
         with patch("argparse.ArgumentParser.parse_args") as mock_parse:

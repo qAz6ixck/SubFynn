@@ -72,6 +72,11 @@ class ThaiSubtitleApp(ctk.CTk):
         except Exception:
             pass
 
+        try:
+            self.tk.eval("proc bgerror {args} {}")
+        except Exception:
+            pass
+
         self.video_path = ""
         base_dir = (
             os.path.dirname(sys.executable)
@@ -107,6 +112,21 @@ class ThaiSubtitleApp(ctk.CTk):
             text_color=COLOR_TEXT_WHITE,
         )
         title_lbl.pack(side="left")
+
+        self.web_btn = ctk.CTkButton(
+            top_header_bar,
+            text="🌐 เปิดโหมด Web App",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            corner_radius=14,
+            fg_color="#181826",
+            hover_color="#242436",
+            border_width=1.5,
+            border_color=COLOR_GLASS_BORDER,
+            text_color=COLOR_TEXT_WHITE,
+            height=30,
+            command=self.open_web_mode,
+        )
+        self.web_btn.pack(side="right", padx=(8, 0))
 
         badge_lbl = ctk.CTkLabel(
             top_header_bar,
@@ -647,6 +667,20 @@ class ThaiSubtitleApp(ctk.CTk):
             os.startfile(target_dir)
         else:
             subprocess.Popen(["xdg-open", target_dir])
+
+    def open_web_mode(self):
+        try:
+            from app import start_server_in_background
+            import webbrowser
+            port = start_server_in_background(port=5000)
+            url = f"http://127.0.0.1:{port}"
+            webbrowser.open(url)
+            self.status_lbl.configure(
+                text=f"🌐 เปิด Web App บนเบราว์เซอร์ที่ {url} เรียบร้อยแล้ว",
+                text_color="#38bdf8",
+            )
+        except Exception as e:
+            messagebox.showerror("ข้อผิดพลาด", f"ไม่สามารถเปิด Web App ได้: {e}")
 
     def _on_error(self, err_msg):
         self.start_btn.configure(state="normal")
