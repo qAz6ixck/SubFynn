@@ -941,7 +941,7 @@ INDEX_HTML = """<!DOCTYPE html>
                 <div id="vercelNotice" style="display: none; margin-top: 14px; background: rgba(239, 68, 68, 0.16); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 12px; padding: 12px 18px; font-size: 0.88rem; color: #fecaca; text-align: center; line-height: 1.5;" onclick="event.stopPropagation()">
                     <strong>ข้อจำกัดของระบบ Vercel Serverless:</strong> ไฟล์นี้มีขนาดเกิน 4.5 MB ซึ่ง Vercel ปฏิเสธการอัปโหลด (HTTP 413) แนะนำให้เปิดใช้งานผ่าน Web App บนเครื่องของคุณด้วย <code>start_web.bat</code> หรือ <code>python app.py</code> เพื่ออัปโหลดไฟล์ขนาดใหญ่ได้ไม่จำกัดและรัน Whisper Large-v3 ได้เต็มสปีดครับ
                 </div>
-                <input type="file" id="videoFile" accept="video/*,audio/*" style="display: none;" onchange="handleFileSelect(this.files[0])">
+                <input type="file" id="videoFile" accept=".mp4,.mkv,.mov,.avi,.webm,.flv,.ts,.wmv,.m4v,video/*,audio/*" style="display: none;" onclick="event.stopPropagation()" onchange="if(this.files && this.files.length) handleFileSelect(this.files[0]); this.value='';">
             </div>
 
             <div class="options-grid">
@@ -1084,22 +1084,31 @@ INDEX_HTML = """<!DOCTYPE html>
         let currentSegments = [];
         let activeRowId = null;
 
-        // Drag & Drop
+        // Prevent default drag/drop on entire window so dropping outside dropZone doesn't navigate away
+        window.addEventListener('dragover', (e) => e.preventDefault());
+        window.addEventListener('drop', (e) => e.preventDefault());
+
+        // Drag & Drop for dropZone
         const dropZone = document.getElementById('dropZone');
         ['dragenter', 'dragover'].forEach(eventName => {
             dropZone.addEventListener(eventName, (e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 dropZone.classList.add('dragover');
             });
         });
-        ['dragleave', 'drop'].forEach(eventName => {
+        ['dragleave'].forEach(eventName => {
             dropZone.addEventListener(eventName, (e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 dropZone.classList.remove('dragover');
             });
         });
         dropZone.addEventListener('drop', (e) => {
-            if (e.dataTransfer.files.length) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
                 handleFileSelect(e.dataTransfer.files[0]);
             }
         });
@@ -1112,8 +1121,19 @@ INDEX_HTML = """<!DOCTYPE html>
             if (!file) return;
             currentFile = file;
             const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
-            document.getElementById('fileInfo').innerText = `เลือกแล้ว: ${file.name} (${sizeMB} MB)`;
-            document.getElementById('startBtn').disabled = false;
+            const fileInfo = document.getElementById('fileInfo');
+            fileInfo.innerText = `✓ เลือกไฟล์แล้ว: ${file.name} (${sizeMB} MB)`;
+            fileInfo.style.display = 'inline-block';
+            fileInfo.style.color = '#38bdf8';
+            fileInfo.style.background = 'rgba(56, 189, 248, 0.15)';
+            fileInfo.style.border = '1px solid rgba(56, 189, 248, 0.35)';
+            fileInfo.style.padding = '6px 16px';
+            fileInfo.style.borderRadius = '999px';
+            fileInfo.style.marginTop = '12px';
+
+            const startBtn = document.getElementById('startBtn');
+            startBtn.disabled = false;
+            startBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
             const notice = document.getElementById('vercelNotice');
             if (notice) {
