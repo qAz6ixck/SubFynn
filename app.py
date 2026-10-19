@@ -55,12 +55,27 @@ BASE_DIR = (
     if getattr(sys, "frozen", False)
     else os.path.dirname(os.path.abspath(__file__))
 )
-DATA_DIR = os.path.join(BASE_DIR, "data")
+
+# Determine writable data directory (Vercel and AWS Lambda have read-only filesystems except /tmp)
+IS_SERVERLESS = bool(
+    os.environ.get("VERCEL")
+    or os.environ.get("AWS_LAMBDA_FUNCTION_NAME")
+    or not os.access(BASE_DIR, os.W_OK)
+)
+
+if IS_SERVERLESS:
+    DATA_DIR = os.path.join("/tmp", "subfynn_data")
+else:
+    DATA_DIR = os.path.join(BASE_DIR, "data")
+
 UPLOAD_DIR = os.path.join(DATA_DIR, "uploads")
 OUTPUT_DIR = os.path.join(DATA_DIR, "outputs")
 
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+try:
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+except Exception:
+    pass
 
 # In-memory task tracker
 tasks: Dict[str, Dict[str, Any]] = {}
@@ -895,16 +910,16 @@ INDEX_HTML = """<!DOCTYPE html>
         <!-- 2. Glass Navigation Header -->
         <header class="glass-panel glass-navbar">
             <div class="brand-group">
-                <div class="brand-logo">SF</div>
+                <div class="brand-logo kanit-black">SF</div>
                 <div>
-                    <div class="brand-title">SubFynn Studio</div>
-                    <div class="brand-subtitle">โปรแกรมสร้างซับไทยอัตโนมัติ (AI Thai Subtitle Generator)</div>
+                    <div class="brand-title kanit-bold">SubFynn Studio</div>
+                    <div class="brand-subtitle kanit-light">โปรแกรมสร้างซับไทยอัตโนมัติ (AI Thai Subtitle Generator)</div>
                 </div>
             </div>
             <div class="nav-status-group">
-                <button class="status-pill kanit-medium" onclick="playIntroVideo()" style="background: rgba(120, 150, 255, 0.22); border: 1px solid rgba(120, 150, 255, 0.45); color: #ffffff; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease;">🎬 ดูวิดีโอเปิดตัว (Intro)</button>
-                <span class="status-pill">● Engine Ready</span>
-                <span class="edition-badge">💎 Liquid Glass Edition</span>
+                <button class="status-pill kanit-medium" onclick="openIntroModal()" style="background: rgba(120, 150, 255, 0.22); border: 1px solid rgba(120, 150, 255, 0.45); color: #ffffff; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease;">🎬 ดูวิดีโอเปิดตัว (Intro)</button>
+                <span class="status-pill kanit-regular">● Engine Ready</span>
+                <span class="edition-badge kanit-semibold">💎 Liquid Glass Edition</span>
             </div>
         </header>
 
@@ -912,16 +927,16 @@ INDEX_HTML = """<!DOCTYPE html>
         <main class="glass-panel">
             <div class="dropzone-glass" id="dropZone" onclick="document.getElementById('videoFile').click()">
                 <span class="upload-icon">🎬</span>
-                <h3>ลากไฟล์วิดีโอมาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์</h3>
-                <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 4px;">รองรับ MP4, MKV, MOV, AVI, WEBM, FLV, TS (สูงสุด 2GB)</p>
-                <div class="file-info" id="fileInfo"></div>
+                <h3 class="kanit-semibold">ลากไฟล์วิดีโอมาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์</h3>
+                <p class="kanit-light" style="color: var(--text-muted); font-size: 0.88rem; margin-top: 4px;">รองรับ MP4, MKV, MOV, AVI, WEBM, FLV, TS (สูงสุด 2GB)</p>
+                <div class="file-info kanit-semibold" id="fileInfo"></div>
                 <input type="file" id="videoFile" accept="video/*,audio/*" style="display: none;" onchange="handleFileSelect(this.files[0])">
             </div>
 
             <div class="options-grid">
                 <div class="option-group">
-                    <label for="modelSelect">ขนาดโมเดล Whisper (AI Speech-to-Text)</label>
-                    <select id="modelSelect">
+                    <label for="modelSelect" class="kanit-medium">ขนาดโมเดล Whisper (AI Speech-to-Text)</label>
+                    <select id="modelSelect" class="kanit-regular">
                         <option value="base" selected>Base (แนะนำทั่วไป - รวดเร็ว สมดุล)</option>
                         <option value="tiny">Tiny (เร็วที่สุด ใช้ทรัพยากรน้อย)</option>
                         <option value="small">Small (แม่นยำปานกลาง)</option>
@@ -930,8 +945,8 @@ INDEX_HTML = """<!DOCTYPE html>
                     </select>
                 </div>
                 <div class="option-group">
-                    <label for="styleSelect">สไตล์การแปลคำบรรยาย (Translation Style)</label>
-                    <select id="styleSelect">
+                    <label for="styleSelect" class="kanit-medium">สไตล์การแปลคำบรรยาย (Translation Style)</label>
+                    <select id="styleSelect" class="kanit-regular">
                         <option value="jav" selected>🔥 หนังผู้ใหญ่ / JAV 18+ (มาตรฐานแฟนซับ: เร่าร้อน เสียว เป็นธรรมชาติ)</option>
                         <option value="jav_dirty">💥 หนังผู้ใหญ่ / JAV 18+ (สายดุดัน / หยาบคายได้เต็มที่: ควย หี เย็ด ซอยยับ แตกใน โคตรเสียว ไม่เซ็นเซอร์)</option>
                         <option value="jav_hardcore">🔞 หนังผู้ใหญ่ / JAV 18+ (Hardcore ดิบเถื่อน หยาบคายขั้นสุด)</option>
@@ -942,8 +957,8 @@ INDEX_HTML = """<!DOCTYPE html>
                     </select>
                 </div>
                 <div class="option-group">
-                    <label for="geminiModelSelect">โมเดล AI แปลภาษา (Translation Model)</label>
-                    <select id="geminiModelSelect">
+                    <label for="geminiModelSelect" class="kanit-medium">โมเดล AI แปลภาษา (Translation Model)</label>
+                    <select id="geminiModelSelect" class="kanit-regular">
                         <option value="gemini-2.5-flash" selected>Gemini 2.5 Flash (เร็ว ฉลาด ได้อารมณ์ - แนะนำ)</option>
                         <option value="gemini-2.5-pro">Gemini 2.5 Pro (แปลได้อารมณ์ลึกซึ้งขั้นสุด - พรีเมียม 18+)</option>
                         <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite (เร็วขั้นสุด ลื่นไหล ประหยัดโควตา)</option>
@@ -954,8 +969,8 @@ INDEX_HTML = """<!DOCTYPE html>
                     </select>
                 </div>
                 <div class="option-group">
-                    <label for="embedModeSelect">เอาซับใส่คลิปวิดีโอทันที (Auto-embed Video)</label>
-                    <select id="embedModeSelect">
+                    <label for="embedModeSelect" class="kanit-medium">เอาซับใส่คลิปวิดีโอทันที (Auto-embed Video)</label>
+                    <select id="embedModeSelect" class="kanit-regular">
                         <option value="burn" selected>🎬 ฝังซับติดภาพถาวร (Hardsub Burn-in - แนะนำ)</option>
                         <option value="soft">⚡ ฝังซับในไฟล์เร็ว 1 วิ (Fast Softsub - เปิด/ปิดได้ ไม่เสียความคมชัด)</option>
                         <option value="both">✨ ทำทั้ง 2 แบบ (ทั้ง Hardsub และ Softsub)</option>
@@ -963,8 +978,8 @@ INDEX_HTML = """<!DOCTYPE html>
                     </select>
                 </div>
                 <div class="option-group">
-                    <label for="langSelect">ภาษาเสียงพูดต้นฉบับในวิดีโอ (ซับไตเติลผลลัพธ์จะเป็นภาษาไทยเสมอ)</label>
-                    <select id="langSelect">
+                    <label for="langSelect" class="kanit-medium">ภาษาเสียงพูดต้นฉบับในวิดีโอ (ซับไตเติลผลลัพธ์จะเป็นภาษาไทยเสมอ)</label>
+                    <select id="langSelect" class="kanit-regular">
                         <option value="ja" selected>ญี่ปุ่น (Japanese - แนะนำสำหรับ JAV/อนิเมะ)</option>
                         <option value="auto">ตรวจจับอัตโนมัติ (Auto-Detect)</option>
                         <option value="en">อังกฤษ (English)</option>
@@ -976,21 +991,21 @@ INDEX_HTML = """<!DOCTYPE html>
                     </select>
                 </div>
                 <div class="option-group">
-                    <label for="geminiKey">Google Gemini API Key (ไม่บังคับ - ปลดล็อกการแปล 18+ ขั้นสุด)</label>
-                    <input type="password" id="geminiKey" placeholder="วาง API Key หรือเว้นว่างเพื่อใช้ระบบแปล JAV ฟรี">
+                    <label for="geminiKey" class="kanit-medium">Google Gemini API Key (ไม่บังคับ - ปลดล็อกการแปล 18+ ขั้นสุด)</label>
+                    <input type="password" id="geminiKey" class="kanit-regular" placeholder="วาง API Key หรือเว้นว่างเพื่อใช้ระบบแปล JAV ฟรี">
                 </div>
             </div>
 
-            <div class="banner-jav-glass">
+            <div class="banner-jav-glass kanit-regular">
                 <span style="font-size: 1.8rem;">🔞</span>
                 <div style="font-size: 0.92rem; line-height: 1.5;">
-                    <strong style="color: #ffffff;">โหมดแปล JAV / หนังผู้ใหญ่ 18+ ได้อารมณ์สมจริง:</strong>
-                    <span style="color: rgba(255, 255, 255, 0.85);"> ปรับสำนวนซับไทยให้อินเนอร์มาเต็ม (เสียว, จะเสร็จแล้ว, อย่านะ, มิดด้าม, ควย, หี, แตกใน) พร้อมระบบ Anti-Hallucination ตัดเสียงครางวนซ้ำ และปลดล็อกระบบกรองคำของ Gemini AI</span>
+                    <strong class="kanit-semibold" style="color: #ffffff;">โหมดแปล JAV / หนังผู้ใหญ่ 18+ ได้อารมณ์สมจริง:</strong>
+                    <span class="kanit-light" style="color: rgba(255, 255, 255, 0.85);"> ปรับสำนวนซับไทยให้อินเนอร์มาเต็ม (เสียว, จะเสร็จแล้ว, อย่านะ, มิดด้าม, ควย, หี, แตกใน) พร้อมระบบ Anti-Hallucination ตัดเสียงครางวนซ้ำ และปลดล็อกระบบกรองคำของ Gemini AI</span>
                 </div>
             </div>
 
             <div style="margin-top: 28px; text-align: center;">
-                <button class="btn btn-glass-primary" id="startBtn" onclick="startProcessing()" disabled>
+                <button class="btn btn-glass-primary kanit-bold" id="startBtn" onclick="startProcessing()" disabled>
                     ✨ เริ่มสร้างซับไทย (Generate Thai Subtitles)
                 </button>
             </div>
@@ -999,13 +1014,13 @@ INDEX_HTML = """<!DOCTYPE html>
                 <div class="progress-bar-bg">
                     <div class="progress-bar-fill" id="progressBar"></div>
                 </div>
-                <div class="progress-status" id="progressStatus">กำลังเตรียมการ...</div>
+                <div class="progress-status kanit-medium" id="progressStatus">กำลังเตรียมการ...</div>
             </div>
         </main>
 
         <!-- 4. Result Preview & Subtitle Editor Glass Panel -->
         <section class="glass-panel result-section" id="resultCard">
-            <h2 style="margin-bottom: 20px; font-size: 1.35rem; color: #ffffff;">🎬 ตัวอย่างวิดีโอและคำบรรยายซับไทย</h2>
+            <h2 class="kanit-bold" style="margin-bottom: 20px; font-size: 1.35rem; color: #ffffff;">🎬 ตัวอย่างวิดีโอและคำบรรยายซับไทย</h2>
             <div class="preview-layout">
                 <div class="video-container">
                     <video id="videoPlayer" controls playsinline></video>
@@ -1013,13 +1028,13 @@ INDEX_HTML = """<!DOCTYPE html>
                 <div>
                     <div class="tools-panel">
                         <div class="shift-tools">
-                            <span style="font-size: 0.85rem; color: var(--text-secondary);">ปรับเวลา:</span>
-                            <button class="btn btn-secondary btn-sm" onclick="shiftSubtitles(-0.5)" title="เลื่อนซับเร็วขึ้น 0.5 วินาที">⏪ -0.5s</button>
-                            <button class="btn btn-secondary btn-sm" onclick="shiftSubtitles(0.5)" title="เลื่อนซับช้าลง 0.5 วินาที">⏩ +0.5s</button>
-                            <button class="btn btn-secondary btn-sm" onclick="promptCustomShift()">⏱️ กำหนดเอง...</button>
+                            <span class="kanit-medium" style="font-size: 0.85rem; color: var(--text-secondary);">ปรับเวลา:</span>
+                            <button class="btn btn-secondary btn-sm kanit-medium" onclick="shiftSubtitles(-0.5)" title="เลื่อนซับเร็วขึ้น 0.5 วินาที">⏪ -0.5s</button>
+                            <button class="btn btn-secondary btn-sm kanit-medium" onclick="shiftSubtitles(0.5)" title="เลื่อนซับช้าลง 0.5 วินาที">⏩ +0.5s</button>
+                            <button class="btn btn-secondary btn-sm kanit-medium" onclick="promptCustomShift()">⏱️ กำหนดเอง...</button>
                         </div>
                         <div style="display: flex; gap: 6px; align-items: center;">
-                            <span id="subCount" style="font-size: 0.88rem; color: #38bdf8; font-weight: 600;">0 ท่อน</span>
+                            <span id="subCount" class="kanit-semibold" style="font-size: 0.88rem; color: #38bdf8; font-weight: 600;">0 ท่อน</span>
                         </div>
                     </div>
                     <div class="subtitles-editor" id="subEditor"></div>
@@ -1027,17 +1042,58 @@ INDEX_HTML = """<!DOCTYPE html>
             </div>
 
             <div class="actions-bar">
-                <a class="btn btn-emerald" id="downloadVideoBtn" href="#" style="text-decoration: none;">🎬 ดาวน์โหลดวิดีโอพร้อมซับ (Subtitled Video MP4)</a>
-                <button class="btn btn-secondary" onclick="downloadSRT()">📥 ดาวน์โหลดไฟล์ .SRT</button>
-                <button class="btn btn-secondary" onclick="downloadVTT()">📥 ดาวน์โหลดไฟล์ .VTT</button>
-                <button class="btn btn-violet" id="burnBtn" onclick="burnSubtitles()">🎬 ฝังซับใหม่ (Custom Burn)</button>
-                <button class="btn btn-secondary" onclick="copyAllText()">📋 คัดลอกข้อความทั้งหมด</button>
+                <a class="btn btn-emerald kanit-semibold" id="downloadVideoBtn" href="#" style="text-decoration: none;">🎬 ดาวน์โหลดวิดีโอพร้อมซับ (Subtitled Video MP4)</a>
+                <button class="btn btn-secondary kanit-medium" onclick="downloadSRT()">📥 ดาวน์โหลดไฟล์ .SRT</button>
+                <button class="btn btn-secondary kanit-medium" onclick="downloadVTT()">📥 ดาวน์โหลดไฟล์ .VTT</button>
+                <button class="btn btn-violet kanit-semibold" id="burnBtn" onclick="burnSubtitles()">🎬 ฝังซับใหม่ (Custom Burn)</button>
+                <button class="btn btn-secondary kanit-medium" onclick="copyAllText()">📋 คัดลอกข้อความทั้งหมด</button>
             </div>
 
             <div class="progress-box" id="burnProgressBox" style="margin-top: 18px;">
                 <div class="progress-bar-bg">
                     <div class="progress-bar-fill" id="burnProgressBar" style="width: 100%;"></div>
                 </div>
+                <div class="progress-status kanit-medium" id="burnStatus">กำลังฝังซับไตเติล...</div>
+            </div>
+        </section>
+
+        <!-- 5. Intro Video Modal Dialog -->
+        <div id="introModal" style="display: none; position: fixed; inset: 0; background: rgba(5, 10, 20, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;" onclick="if(event.target===this) closeIntroModal()">
+            <div class="glass-panel" style="max-width: 860px; width: 100%; padding: 24px; border-radius: 24px; position: relative; box-shadow: 0 25px 60px rgba(0,0,0,0.7);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 1.5rem;">🎬</span>
+                        <div>
+                            <h3 class="kanit-bold" style="font-size: 1.25rem; color: #ffffff; margin: 0;">SubFynn — Launch Intro Video</h3>
+                            <p class="kanit-light" style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">ความยาว 3.5 วินาที • Animated by HyperFrames • Kanit Typography</p>
+                        </div>
+                    </div>
+                    <button onclick="closeIntroModal()" class="btn btn-secondary btn-sm kanit-medium" style="border-radius: 50%; width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer;">✕</button>
+                </div>
+                <div style="border-radius: 16px; overflow: hidden; background: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                    <video id="introVideoPlayer" controls playsinline style="width: 100%; display: block; max-height: 480px;">
+                        <source src="/assets/subfynn_intro.mp4" type="video/mp4">
+                    </video>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; flex-wrap: wrap; gap: 10px;">
+                    <div class="kanit-light-italic" style="font-size: 0.85rem; color: var(--accent-cyan);">✨ วิดีโอเปิดตัวพร้อมเสียงและแอนิเมชัน 3D Glassmorphism</div>
+                    <div style="display: flex; gap: 8px;">
+                        <a href="/assets/subfynn_intro.mp4" download="subfynn_intro.mp4" class="btn btn-secondary btn-sm kanit-medium" style="text-decoration: none;">📥 ดาวน์โหลด MP4</a>
+                        <button onclick="const p=document.getElementById('introVideoPlayer'); if(p){p.currentTime=0; p.play();}" class="btn btn-emerald btn-sm kanit-medium">🔄 เล่นซ้ำ</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer style="text-align: center; margin-top: 28px; padding-bottom: 20px;">
+            <div class="kanit-extralight" style="font-size: 0.85rem; color: var(--text-muted);">
+                SubFynn Studio — AI Thai Subtitle Generator • Powered by faster-whisper &amp; Google Gemini AI
+            </div>
+            <div class="kanit-thin-italic" style="font-size: 0.78rem; color: var(--accent-cyan); margin-top: 4px; opacity: 0.85;">
+                Typography System: Kanit Google Font (All 18 Weights &amp; Styles Active)
+            </div>
+        </footer>
+    </div>
                 <div class="progress-status" id="burnStatus">กำลังฝังซับไตเติล...</div>
             </div>
         </section>
@@ -1413,18 +1469,31 @@ INDEX_HTML = """<!DOCTYPE html>
             }
         }
 
-        function playIntroVideo() {
-            const resSec = document.getElementById('resultSection');
-            const vp = document.getElementById('videoPlayer');
-            if (resSec && vp) {
-                resSec.style.display = 'block';
-                vp.src = '/assets/subfynn_intro.mp4';
-                vp.currentTime = 0;
-                vp.play().catch(() => {});
-                resSec.scrollIntoView({ behavior: 'smooth' });
-            } else {
-                window.open('/assets/subfynn_intro.mp4', '_blank');
+        function openIntroModal() {
+            const modal = document.getElementById('introModal');
+            const p = document.getElementById('introVideoPlayer');
+            if (modal) {
+                modal.style.display = 'flex';
+                if (p) {
+                    p.currentTime = 0;
+                    p.play().catch(() => {});
+                }
             }
+        }
+
+        function closeIntroModal() {
+            const modal = document.getElementById('introModal');
+            const p = document.getElementById('introVideoPlayer');
+            if (p) {
+                p.pause();
+            }
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        function playIntroVideo() {
+            openIntroModal();
         }
 
         function copyAllText() {
@@ -1456,10 +1525,55 @@ class AppRequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def do_GET(self):
-        parsed = urlparse(self.path)
+    def get_request_path(self):
+        """
+        Extract the logical request path and query parameters, correctly resolving
+        Vercel edge rewrites and proxy headers (x-vercel-matched-path, x-matched-path,
+        x-forwarded-uri, x-original-url).
+        """
+        forwarded = (
+            self.headers.get("x-vercel-matched-path")
+            or self.headers.get("x-matched-path")
+            or self.headers.get("x-forwarded-uri")
+            or self.headers.get("x-original-url")
+        )
+        target = forwarded if forwarded else self.path
+        parsed = urlparse(target)
         path = parsed.path
-        query = parse_qs(parsed.query)
+
+        # If running under a Vercel rewrite where the destination is /api/index.py
+        if path in ("/api/index.py", "/api/index"):
+            path = "/api/status"
+
+        query = parse_qs(parsed.query) if parsed.query else parse_qs(urlparse(self.path).query)
+        return path, query
+
+    def do_GET(self):
+        path, query = self.get_request_path()
+
+        if path in ("/api", "/api/", "/api/status", "/api/health", "/api/info"):
+            self.send_json(
+                {
+                    "status": "online",
+                    "app": "SubFynn Studio — AI Thai Subtitle Generator",
+                    "version": "1.0.0",
+                    "font": "Kanit",
+                    "typography": {
+                        "primary": "Kanit, sans-serif",
+                        "weights": [100, 200, 300, 400, 500, 600, 700, 800, 900],
+                        "styles": ["normal", "italic"],
+                    },
+                    "features": [
+                        "whisper_speech_to_text",
+                        "gemini_translation",
+                        "jav_slang_engine",
+                        "liquid_glassmorphism",
+                        "hyperframes_intro_video",
+                    ],
+                    "intro_video": "/assets/subfynn_intro.mp4",
+                }
+            )
+            return
 
         if path == "/" or path == "/index.html":
             body = INDEX_HTML.encode("utf-8")
@@ -1554,9 +1668,7 @@ class AppRequestHandler(BaseHTTPRequestHandler):
         self.send_error(404, "Not Found")
 
     def do_POST(self):
-        parsed = urlparse(self.path)
-        path = parsed.path
-        query = parse_qs(parsed.query)
+        path, query = self.get_request_path()
 
         if path == "/api/upload":
             raw_filename = query.get("filename", ["video.mp4"])[0]

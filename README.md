@@ -121,12 +121,14 @@ d:\MyProject\subdev\
 ├── gui.py              # หน้าต่าง Desktop Application (CustomTkinter)
 ├── cli.py              # คำสั่ง CLI สำหรับการประมวลผล
 ├── vercel.json         # การตั้งค่า Deploy สู่ Vercel (Edge & Serverless Python)
-├── api/index.py        # Serverless Function Entrypoint สำหรับ Vercel
+├── api/index.py        # Serverless Function Entrypoint สำหรับ Vercel (/api/status, etc.)
 ├── public/             # Static Assets และ Web App Frontend สำหรับ Vercel Edge Hosting
 ├── assets/             # ไฟล์มีเดียและคลิปวิดีโอเปิดตัว (subfynn_intro.mp4)
 ├── intro_video/        # HyperFrames Source Project สำหรับเรนเดอร์วิดีโอเปิดตัว
+├── requirements.txt    # แพ็กเกจสำหรับ Vercel Serverless Production (<50MB, ไม่เกินโควตา 250MB)
+├── requirements-local.txt # แพ็กเกจสำหรับเครื่อง Local (รวม faster-whisper และ customtkinter)
 ├── test_engine.py      # ชุดทดสอบอัตโนมัติสำหรับโมดูล engine (Unit & Integration Tests)
-├── test_app.py         # ชุดทดสอบอัตโนมัติสำหรับ Web API & Streaming
+├── test_app.py         # ชุดทดสอบอัตโนมัติสำหรับ Web API, Vercel Serverless & Streaming
 ├── test_gui_and_main.py # ชุดทดสอบอัตโนมัติสำหรับ GUI และ Routing
 ├── ThaiSubtitles.bat   # ทางลัดเปิด Desktop GUI แบบรัน Exe ทันที
 ├── start_web.bat       # ทางลัดเปิด Web App ในคลิกเดียว
@@ -144,7 +146,8 @@ SubFynn รองรับการ Deploy ขึ้น **Vercel** โดยต�
 2. **เชื่อมต่อโปรเจกต์บน Vercel Dashboard** (นำเข้าจาก GitHub Repo `https://github.com/qAz6ixck/SubFynn.git`)
 3. Vercel จะตรวจจับ `vercel.json` และโฟลเดอร์ `public/`, `api/` โดยอัตโนมัติ:
    - ส่วน Frontend: เสิร์ฟผ่าน Global Edge Network ทันใจ ไม่มี Cold Start
-   - ส่วน Backend: รองรับ `api/index.py` (Vercel Python Serverless Function)
+   - ส่วน Backend: รองรับ `api/index.py` (Vercel Python Serverless Function) พร้อมรองรับ Header `x-vercel-matched-path` และมี Endpoint `/api/status`, `/api/health`
+   - ขนาดแพ็กเกจ Serverless: `requirements.txt` ปรับให้เบา (<50MB) ป้องกันข้อผิดพลาดขนาดเกิน 250MB ของ Vercel
    - ฟอนต์หลัก: ใช้งานฟอนต์ **Kanit** ครบทุกน้ำหนักและสไตล์อย่างสมบูรณ์แบบ
 4. **คลิปวิดีโอเปิดตัว (Intro Video)**:
    - รับชมวิดีโอแนะนำตัวแอป SubFynn ความคมชัดระดับ 1080p ที่ `assets/subfynn_intro.mp4` หรือกดปุ่ม "🎬 ดูวิดีโอเปิดตัว (Intro)" บน Web Navbar ได้ทันที
@@ -163,7 +166,7 @@ SubFynn Web App ใช้ฟอนต์ **Kanit** จาก Google Fonts เป
 
 ## 🧪 การทดสอบระบบ (Verification)
 
-สามารถรันชุดทดสอบความถูกต้องทั้งหมด (49 รายการ) ได้ด้วยคำสั่ง:
+สามารถรันชุดทดสอบความถูกต้องทั้งหมด (53 รายการ) ได้ด้วยคำสั่ง:
 ```bash
 python -m unittest discover -v
 ```

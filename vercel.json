@@ -1,6 +1,7 @@
 {
   "version": 2,
   "rewrites": [
+    { "source": "/api", "destination": "/api/index.py" },
     { "source": "/api/(.*)", "destination": "/api/index.py" },
     { "source": "/assets/(.*)", "destination": "/public/assets/$1" },
     { "source": "/subfynn_intro.mp4", "destination": "/public/assets/subfynn_intro.mp4" },

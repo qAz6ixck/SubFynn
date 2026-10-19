@@ -203,6 +203,39 @@ class TestWebAppServer(unittest.TestCase):
         self.assertNotEqual(free_port, self.port)
         self.assertGreater(free_port, self.port)
 
+    def test_get_api_status(self):
+        url = f"http://127.0.0.1:{self.port}/api/status"
+        with urllib.request.urlopen(url) as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertEqual(data.get("status"), "online")
+            self.assertEqual(data.get("font"), "Kanit")
+            self.assertIn("SubFynn", data.get("app"))
+            self.assertIn("intro_video", data)
+
+    def test_get_api_health(self):
+        url = f"http://127.0.0.1:{self.port}/api/health"
+        with urllib.request.urlopen(url) as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertEqual(data.get("status"), "online")
+
+    def test_vercel_matched_path_header(self):
+        # Simulates Vercel rewrite where request to /api/status was rewritten to /api/index.py
+        url = f"http://127.0.0.1:{self.port}/api/index.py"
+        req = urllib.request.Request(url, headers={"x-vercel-matched-path": "/api/status"})
+        with urllib.request.urlopen(req) as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertEqual(data.get("status"), "online")
+            self.assertEqual(data.get("font"), "Kanit")
+
+    def test_api_index_handler_import(self):
+        import api.index
+        self.assertTrue(hasattr(api.index, "handler"))
+        self.assertTrue(issubclass(api.index.handler, AppRequestHandler))
+
+
 
 if __name__ == "__main__":
     unittest.main()

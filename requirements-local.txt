@@ -1,0 +1,4 @@
+# Local Development & Full Desktop GUI Dependencies
+-r requirements.txt
+faster-whisper>=1.0.0
+customtkinter>=5.2.0
