@@ -935,6 +935,9 @@ INDEX_HTML = """<!DOCTYPE html>
                 <h3 class="kanit-semibold">ลากไฟล์วิดีโอมาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์</h3>
                 <p class="kanit-light" style="color: var(--text-muted); font-size: 0.88rem; margin-top: 4px;">รองรับ MP4, MKV, MOV, AVI, WEBM, FLV, TS</p>
                 <div class="file-info kanit-semibold" id="fileInfo"></div>
+                <div id="vercelNotice" style="display: none; margin-top: 14px; background: rgba(239, 68, 68, 0.16); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 12px; padding: 12px 18px; font-size: 0.88rem; color: #fecaca; text-align: center; line-height: 1.5;" onclick="event.stopPropagation()">
+                    <strong>ข้อจำกัดของระบบ Vercel Serverless:</strong> ไฟล์นี้มีขนาดเกิน 4.5 MB ซึ่ง Vercel ปฏิเสธการอัปโหลด (HTTP 413) แนะนำให้เปิดใช้งานผ่าน Web App บนเครื่องของคุณด้วย <code>start_web.bat</code> หรือ <code>python app.py</code> เพื่ออัปโหลดไฟล์ขนาดใหญ่ได้ไม่จำกัดและรัน Whisper Large-v3 ได้เต็มสปีดครับ
+                </div>
                 <input type="file" id="videoFile" accept="video/*,audio/*" style="display: none;" onchange="handleFileSelect(this.files[0])">
             </div>
 
@@ -1098,16 +1101,36 @@ INDEX_HTML = """<!DOCTYPE html>
             }
         });
 
+        function isVercelHost() {
+            return window.location.hostname.includes('vercel.app');
+        }
+
         function handleFileSelect(file) {
             if (!file) return;
             currentFile = file;
             const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
             document.getElementById('fileInfo').innerText = `เลือกแล้ว: ${file.name} (${sizeMB} MB)`;
             document.getElementById('startBtn').disabled = false;
+
+            const notice = document.getElementById('vercelNotice');
+            if (notice) {
+                if (isVercelHost() && file.size > 4.5 * 1024 * 1024) {
+                    notice.style.display = 'block';
+                } else {
+                    notice.style.display = 'none';
+                }
+            }
         }
 
         function startProcessing() {
             if (!currentFile) return;
+
+            // Check Vercel 4.5MB Serverless Payload limit
+            if (isVercelHost() && currentFile.size > 4.5 * 1024 * 1024) {
+                const sizeMB = (currentFile.size / (1024 * 1024)).toFixed(1);
+                alert(`ไม่สามารถอัปโหลดไฟล์ขนาด ${sizeMB} MB บน Vercel Cloud ได้\n\nสาเหตุ: ระบบ Vercel Serverless จำกัดขนาดไฟล์ไม่เกิน 4.5 MB ต่อคำขอ (HTTP 413)\n\nวิธีใช้งานที่ถูกต้อง:\nกรุณาเปิดใช้งาน Web App บนเครื่องคอมพิวเตอร์ของคุณด้วยไฟล์ "start_web.bat" หรือรันคำสั่ง "python app.py"\n(โหมดเครื่องรองรับไฟล์ขนาดใหญ่ได้ไม่จำกัดถึง 2GB+ พร้อมประมวลผลด้วย GPU และ Whisper Large-v3 ได้เต็มสปีดครับ)`);
+                return;
+            }
 
             const startBtn = document.getElementById('startBtn');
             const progressBox = document.getElementById('progressBox');
@@ -1162,6 +1185,10 @@ INDEX_HTML = """<!DOCTYPE html>
                         startBtn.disabled = false;
                         progressBox.style.display = 'none';
                     }
+                } else if (xhr.status === 413) {
+                    alert('การอัปโหลดล้มเหลว (HTTP 413 Payload Too Large)\n\nไฟล์มีขนาดเกิน 4.5 MB ที่ Vercel Serverless กำหนดไว้\n\nวิธีแก้ไขเพื่อใช้งานไฟล์เต็ม:\nกรุณารัน Web App ในเครื่องคอมพิวเตอร์ของคุณผ่านไฟล์ "start_web.bat" หรือรันคำสั่ง "python app.py" เพื่อใช้งานไฟล์ขนาดใหญ่ได้ไม่จำกัดและรัน Whisper Large-v3 ได้เต็มที่ครับ');
+                    startBtn.disabled = false;
+                    progressBox.style.display = 'none';
                 } else {
                     alert('การอัปโหลดล้มเหลว HTTP ' + xhr.status);
                     startBtn.disabled = false;
@@ -1489,6 +1516,16 @@ class AppRequestHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         # Clean console logging
         pass
+
+    def end_headers(self):
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Range")
+        super().end_headers()
+
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self.end_headers()
 
     def send_json(self, data: Any, status: int = 200):
         body = json.dumps(data, ensure_ascii=False).encode("utf-8")
