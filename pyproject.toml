@@ -1,0 +1,13 @@
+[project]
+name = "subfynn"
+version = "1.0.0"
+description = "SubFynn — AI Thai Subtitle Generator Web App"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "google-genai>=0.1.0",
+    "numpy>=1.20.0",
+]
+
+[tool.vercel]
+entrypoint = "api.index:app"

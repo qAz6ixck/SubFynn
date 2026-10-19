@@ -1881,6 +1881,119 @@ class AppRequestHandler(BaseHTTPRequestHandler):
             pass
 
 
+from io import BytesIO
+
+
+class WSGIApp:
+    """
+    WSGI Application adapter that routes WSGI requests to AppRequestHandler.
+    Enables SubFynn to run seamlessly on Vercel Serverless Functions, AWS Lambda,
+    Gunicorn, uWSGI, and standard WSGI servers.
+    """
+    def __init__(self, handler_class=None):
+        self.handler_class = handler_class or AppRequestHandler
+
+    def __call__(self, environ: Dict[str, Any], start_response):
+        method = environ.get("REQUEST_METHOD", "GET").upper()
+        path = environ.get("PATH_INFO", "/")
+        query = environ.get("QUERY_STRING", "")
+        if query:
+            path += "?" + query
+
+        content_length_str = environ.get("CONTENT_LENGTH")
+        try:
+            content_length = int(content_length_str) if content_length_str else 0
+        except ValueError:
+            content_length = 0
+
+        body = b""
+        if content_length > 0 and "wsgi.input" in environ:
+            try:
+                body = environ["wsgi.input"].read(content_length)
+            except Exception:
+                body = b""
+
+        raw_headers = [f"{method} {path} HTTP/1.1\r\n".encode("latin-1")]
+        host = environ.get("HTTP_HOST", "localhost")
+        raw_headers.append(f"Host: {host}\r\n".encode("latin-1"))
+
+        if content_length > 0:
+            raw_headers.append(f"Content-Length: {content_length}\r\n".encode("latin-1"))
+
+        content_type = environ.get("CONTENT_TYPE")
+        if content_type:
+            raw_headers.append(f"Content-Type: {content_type}\r\n".encode("latin-1"))
+
+        for k, v in environ.items():
+            if k.startswith("HTTP_"):
+                header_name = k[5:].replace("_", "-")
+                raw_headers.append(f"{header_name}: {v}\r\n".encode("latin-1"))
+            elif k.lower() in ("x_vercel_matched_path", "x_matched_path", "x_forwarded_uri"):
+                header_name = k.replace("_", "-")
+                raw_headers.append(f"{header_name}: {v}\r\n".encode("latin-1"))
+
+        raw_headers.append(b"\r\n")
+        raw_req = b"".join(raw_headers) + body
+
+        rfile = BytesIO(raw_req)
+        wfile = BytesIO()
+
+        class _Wsock:
+            def makefile(self, mode, *args, **kwargs):
+                if "r" in mode:
+                    return rfile
+                return wfile
+
+            def sendall(self, b):
+                wfile.write(b)
+
+        class _Wserver:
+            pass
+
+        try:
+            handler_instance = self.handler_class(_Wsock(), ("127.0.0.1", 80), _Wserver())
+        except Exception as e:
+            err_body = json.dumps({"error": str(e), "status": "error"}).encode("utf-8")
+            start_response("500 Internal Server Error", [
+                ("Content-Type", "application/json; charset=utf-8"),
+                ("Content-Length", str(len(err_body))),
+            ])
+            return [err_body]
+
+        output = wfile.getvalue()
+        if b"\r\n\r\n" in output:
+            header_data, resp_body = output.split(b"\r\n\r\n", 1)
+        else:
+            header_data = output
+            resp_body = b""
+
+        lines = header_data.decode("iso-8859-1", errors="replace").split("\r\n")
+        status_line = lines[0] if lines else "HTTP/1.1 200 OK"
+        status = status_line.split(" ", 1)[1] if " " in status_line else "200 OK"
+
+        response_headers = []
+        for line in lines[1:]:
+            if ":" in line:
+                name, val = line.split(":", 1)
+                response_headers.append((name.strip(), val.strip()))
+
+        start_response(status, response_headers)
+        return [resp_body]
+
+
+# Global WSGI application instance
+wsgi_application = WSGIApp(AppRequestHandler)
+
+# Top-level exports for Vercel Serverless Function and WSGI runtime discovery
+class handler(AppRequestHandler):
+    """Vercel BaseHTTPRequestHandler entrypoint."""
+    pass
+
+
+app = wsgi_application
+application = wsgi_application
+
+
 _global_web_server = None
 _global_web_thread = None
 _global_web_port = 5000

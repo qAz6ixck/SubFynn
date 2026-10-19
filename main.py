@@ -39,6 +39,19 @@ if sys.stderr and hasattr(sys.stderr, "reconfigure"):
         pass
 
 
+from app import AppRequestHandler, wsgi_application
+
+
+# Top-level exports for Vercel Serverless Function discovery fallback
+class handler(AppRequestHandler):
+    """Vercel BaseHTTPRequestHandler entrypoint fallback."""
+    pass
+
+
+app = wsgi_application
+application = wsgi_application
+
+
 def main():
     if "--web" in sys.argv or "--server" in sys.argv:
         from app import start_server

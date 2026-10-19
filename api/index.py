@@ -1,6 +1,6 @@
 """
 Vercel Serverless Function entrypoint for SubFynn Web App.
-Routes incoming HTTP requests to AppRequestHandler.
+Routes incoming HTTP requests to AppRequestHandler or WSGI application.
 """
 
 import os
@@ -12,31 +12,16 @@ PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-try:
-    from app import AppRequestHandler
+from app import AppRequestHandler, WSGIApp, wsgi_application
 
-    class handler(AppRequestHandler):
-        """
-        Vercel Python serverless handler using AppRequestHandler.
-        """
-        pass
+# Top-level class definition for Vercel BaseHTTPRequestHandler detection
+class handler(AppRequestHandler):
+    """
+    Vercel Python serverless handler using AppRequestHandler.
+    """
+    pass
 
-except Exception as err:
-    from http.server import BaseHTTPRequestHandler
-    import json
 
-    class handler(BaseHTTPRequestHandler):
-        def do_GET(self):
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.end_headers()
-            self.wfile.write(
-                json.dumps(
-                    {
-                        "status": "online",
-                        "app": "SubFynn AI Thai Subtitle Generator",
-                        "error_fallback": str(err),
-                    },
-                    ensure_ascii=False,
-                ).encode("utf-8")
-            )
+# Top-level callable variables for Vercel WSGI/ASGI entrypoint detection
+app = wsgi_application
+application = wsgi_application

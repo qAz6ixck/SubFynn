@@ -234,8 +234,52 @@ class TestWebAppServer(unittest.TestCase):
         import api.index
         self.assertTrue(hasattr(api.index, "handler"))
         self.assertTrue(issubclass(api.index.handler, AppRequestHandler))
+        self.assertTrue(hasattr(api.index, "app"))
+        self.assertTrue(hasattr(api.index, "application"))
+        self.assertTrue(callable(api.index.app))
 
+    def test_app_and_main_entrypoint_exports(self):
+        import app
+        import main
+        self.assertTrue(hasattr(app, "handler"))
+        self.assertTrue(hasattr(app, "app"))
+        self.assertTrue(hasattr(app, "application"))
+        self.assertTrue(callable(app.app))
+
+        self.assertTrue(hasattr(main, "handler"))
+        self.assertTrue(hasattr(main, "app"))
+        self.assertTrue(hasattr(main, "application"))
+        self.assertTrue(callable(main.app))
+
+    def test_wsgi_app_request_handling(self):
+        from io import BytesIO
+        from app import wsgi_application
+
+        captured = {}
+        def start_response(status, headers):
+            captured["status"] = status
+            captured["headers"] = headers
+
+        # Test GET /api/status via WSGI
+        environ = {
+            "REQUEST_METHOD": "GET",
+            "PATH_INFO": "/api/status",
+            "QUERY_STRING": "",
+            "wsgi.input": BytesIO(b""),
+        }
+        res = wsgi_application(environ, start_response)
+        self.assertEqual(captured["status"], "200 OK")
+        body = json.loads(b"".join(res).decode("utf-8"))
+        self.assertEqual(body.get("status"), "online")
+        self.assertEqual(body.get("font"), "Kanit")
+
+        # Test GET /api/health via WSGI
+        res = wsgi_application({"REQUEST_METHOD": "GET", "PATH_INFO": "/api/health"}, start_response)
+        self.assertEqual(captured["status"], "200 OK")
+        body = json.loads(b"".join(res).decode("utf-8"))
+        self.assertEqual(body.get("status"), "online")
 
 
 if __name__ == "__main__":
     unittest.main()
+
