@@ -289,26 +289,26 @@ INDEX_HTML = """<!DOCTYPE html>
         }
 
         :root {
-            --bg-deep: #09121f;
-            --glass-surface: rgba(20, 32, 50, 0.82);
-            --glass-surface-hover: rgba(26, 40, 60, 0.90);
-            --glass-surface-active: rgba(32, 48, 70, 0.94);
-            --glass-border: rgba(195, 213, 235, 0.20);
-            --glass-border-hover: rgba(195, 213, 235, 0.36);
-            --glass-highlight: rgba(255, 255, 255, 0.24);
-            --accent-indigo: #7896ff;
-            --accent-pink: #bb9bff;
-            --accent-cyan: #65d4e8;
-            --accent-emerald: #4ed2a0;
-            --text-heading: #f7f9fd;
-            --text-primary: #f1f5fb;
-            --text-body: #e0e8f3;
-            --text-secondary: #bdcadd;
-            --text-muted: #aebbd0;
+            --bg-deep: #23212C;
+            --glass-surface: rgba(44, 41, 56, 0.78);
+            --glass-surface-hover: rgba(53, 49, 68, 0.88);
+            --glass-surface-active: rgba(62, 57, 80, 0.94);
+            --glass-border: rgba(210, 200, 230, 0.18);
+            --glass-border-hover: rgba(210, 200, 230, 0.32);
+            --glass-highlight: rgba(255, 255, 255, 0.22);
+            --accent-indigo: #8b5cf6;
+            --accent-pink: #d946ef;
+            --accent-cyan: #38bdf8;
+            --accent-emerald: #10b981;
+            --text-heading: #f8fafc;
+            --text-primary: #f1f5f9;
+            --text-body: #e2e8f0;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
             --radius-card: 24px;
             --radius-input: 14px;
             --radius-pill: 9999px;
-            --glass-shadow: 0 20px 48px rgba(2, 8, 18, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+            --glass-shadow: 0 20px 48px rgba(10, 8, 18, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.12);
         }
 
         * {
@@ -325,11 +325,11 @@ INDEX_HTML = """<!DOCTYPE html>
         body {
             background-color: var(--bg-deep);
             background-image: 
-                radial-gradient(at 0% 0%, rgba(64, 91, 145, 0.34) 0px, transparent 55%),
-                radial-gradient(at 100% 0%, rgba(39, 116, 139, 0.24) 0px, transparent 50%),
-                radial-gradient(at 50% 50%, rgba(60, 80, 122, 0.18) 0px, transparent 60%),
-                radial-gradient(at 0% 100%, rgba(15, 31, 50, 0.7) 0px, transparent 55%),
-                radial-gradient(at 100% 100%, rgba(35, 66, 88, 0.28) 0px, transparent 55%);
+                radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.18) 0px, transparent 55%),
+                radial-gradient(at 100% 0%, rgba(217, 70, 239, 0.14) 0px, transparent 50%),
+                radial-gradient(at 50% 50%, rgba(56, 189, 248, 0.08) 0px, transparent 60%),
+                radial-gradient(at 0% 100%, rgba(35, 33, 44, 0.9) 0px, transparent 55%),
+                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.12) 0px, transparent 55%);
             background-attachment: fixed;
             background-size: cover;
             color: var(--text-body);
@@ -354,14 +354,14 @@ INDEX_HTML = """<!DOCTYPE html>
             position: absolute;
             border-radius: 50%;
             filter: blur(110px);
-            opacity: 0.30;
+            opacity: 0.35;
             animation: floatOrb 18s ease-in-out infinite alternate;
         }
 
         .orb-1 {
             width: 540px;
             height: 540px;
-            background: radial-gradient(circle, rgba(111, 151, 225, 0.55), transparent 70%);
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.45), transparent 70%);
             top: -100px;
             left: -100px;
         }
@@ -369,7 +369,7 @@ INDEX_HTML = """<!DOCTYPE html>
         .orb-2 {
             width: 480px;
             height: 480px;
-            background: radial-gradient(circle, rgba(76, 168, 177, 0.44), transparent 70%);
+            background: radial-gradient(circle, rgba(217, 70, 239, 0.35), transparent 70%);
             bottom: -100px;
             right: -80px;
             animation-delay: -6s;
@@ -378,7 +378,7 @@ INDEX_HTML = """<!DOCTYPE html>
         .orb-3 {
             width: 400px;
             height: 400px;
-            background: radial-gradient(circle, rgba(114, 139, 196, 0.34), transparent 70%);
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.28), transparent 70%);
             top: 45%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -420,57 +420,62 @@ INDEX_HTML = """<!DOCTYPE html>
             border-color: var(--glass-border-hover);
         }
 
-        /* 4. Glass Navigation Bar */
-        .glass-navbar {
+        /* 3. Centered Header Banner */
+        .header-banner {
+            text-align: center;
+            margin-bottom: 8px;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: space-between;
-            padding: 18px 30px;
+            gap: 12px;
+        }
+
+        .banner-title-row {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
             flex-wrap: wrap;
-            gap: 16px;
         }
 
-        .brand-group {
-            display: flex;
-            align-items: center;
-            gap: 16px;
+        .banner-title {
+            font-size: 2.1rem;
+            font-weight: 700;
+            color: var(--text-heading);
+            letter-spacing: -0.02em;
+            text-shadow: 0 2px 14px rgba(0, 0, 0, 0.4);
+            margin: 0;
         }
 
-        .brand-logo {
-            width: 46px;
-            height: 46px;
-            border-radius: 14px;
-            background: linear-gradient(135deg, #5274c4, #398fa7);
+        .banner-badge {
+            background: rgba(255, 255, 255, 0.10);
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: var(--radius-pill);
+            padding: 5px 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+        }
+
+        .banner-desc {
+            color: var(--text-body);
+            font-size: 1.02rem;
+            max-width: 720px;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .banner-actions {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 800;
-            font-size: 1.3rem;
-            color: #ffffff;
-            box-shadow: 0 8px 24px rgba(78, 126, 180, 0.28);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .brand-title {
-            font-size: 1.45rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            background: linear-gradient(to right, #ffffff, #cbd5e1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .brand-subtitle {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
-
-        .nav-status-group {
-            display: flex;
-            align-items: center;
             gap: 12px;
             flex-wrap: wrap;
+            margin-top: 4px;
         }
 
         .status-pill {
@@ -487,15 +492,18 @@ INDEX_HTML = """<!DOCTYPE html>
             gap: 6px;
         }
 
-        .edition-badge {
-            padding: 6px 16px;
-            border-radius: var(--radius-pill);
-            font-size: 0.82rem;
-            font-weight: 600;
-            background: rgba(56, 189, 248, 0.15);
-            color: #38bdf8;
-            border: 1px solid rgba(56, 189, 248, 0.35);
-            box-shadow: 0 2px 10px rgba(56, 189, 248, 0.2);
+        .btn-intro-pill {
+            background: rgba(139, 92, 246, 0.22);
+            border: 1px solid rgba(139, 92, 246, 0.45);
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-intro-pill:hover {
+            background: rgba(139, 92, 246, 0.38);
+            border-color: rgba(139, 92, 246, 0.65);
+            transform: translateY(-1px);
         }
 
         /* 5. Dropzone Glass */
@@ -504,23 +512,23 @@ INDEX_HTML = """<!DOCTYPE html>
             border-radius: 20px;
             padding: 42px 24px;
             text-align: center;
-            background: rgba(15, 23, 42, 0.40);
+            background: rgba(25, 23, 34, 0.45);
             cursor: pointer;
             transition: all 0.25s ease;
         }
 
         .dropzone-glass:hover, .dropzone-glass.dragover {
             border-color: var(--accent-cyan);
-            background: rgba(6, 182, 212, 0.08);
+            background: rgba(56, 189, 248, 0.08);
             transform: translateY(-2px);
-            box-shadow: 0 0 30px rgba(6, 182, 212, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 30px rgba(56, 189, 248, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
 
-        .upload-icon {
-            font-size: 46px;
+        .upload-icon-wrapper {
             margin-bottom: 12px;
-            display: inline-block;
-            filter: drop-shadow(0 4px 12px rgba(99, 102, 241, 0.4));
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .dropzone-glass h3 {
@@ -547,7 +555,7 @@ INDEX_HTML = """<!DOCTYPE html>
             display: inline-block;
         }
 
-        /* 6. Form Controls & Grid */
+        /* 6. Form Controls & Grid with Equal Alignment */
         .options-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -558,54 +566,50 @@ INDEX_HTML = """<!DOCTYPE html>
         .option-group {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            justify-content: flex-start;
         }
 
-        label {
-            font-size: 0.96rem;
+        .option-group label {
+            font-size: 0.95rem;
             font-weight: 600;
             color: var(--text-secondary);
+            min-height: 48px;
+            display: flex;
+            align-items: flex-end;
+            margin-bottom: 8px;
+            line-height: 1.35;
         }
 
-        select, input[type="text"], input[type="password"] {
+        .option-group select, 
+        .option-group input[type="text"], 
+        .option-group input[type="password"] {
             width: 100%;
-            background: rgba(15, 23, 42, 0.65);
+            height: 48px;
+            box-sizing: border-box;
+            background: rgba(25, 23, 34, 0.75);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid var(--glass-border);
             border-radius: var(--radius-input);
-            padding: 13px 16px;
+            padding: 0 16px;
             color: var(--text-heading);
-            font-size: 1rem;
-            line-height: 1.5;
+            font-size: 0.96rem;
             outline: none;
             transition: all 0.2s ease;
             box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
         }
 
-        select:focus, input:focus {
+        .option-group select:focus, 
+        .option-group input:focus {
             border-color: var(--accent-indigo);
-            background: rgba(15, 23, 42, 0.85);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3), 0 0 18px rgba(99, 102, 241, 0.25);
+            background: rgba(30, 27, 42, 0.90);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3), 0 0 18px rgba(139, 92, 246, 0.25);
         }
 
-        select option {
-            background-color: #0f172a;
+        .option-group select option {
+            background-color: #23212C;
             color: #ffffff;
             padding: 8px;
-        }
-
-        /* 7. JAV 18+ Special Glass Banner */
-        .banner-jav-glass {
-            background: rgba(244, 63, 94, 0.12);
-            border: 1px solid rgba(244, 63, 94, 0.32);
-            border-radius: 18px;
-            padding: 16px 22px;
-            margin-top: 22px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            box-shadow: 0 8px 24px rgba(244, 63, 94, 0.15);
         }
 
         /* 8. Glowing Action Buttons */
@@ -625,7 +629,7 @@ INDEX_HTML = """<!DOCTYPE html>
         }
 
         .btn-glass-primary {
-            background: linear-gradient(135deg, #5578c8, #397e9d);
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
             border: 1px solid rgba(255, 255, 255, 0.35);
             border-radius: 16px;
             padding: 15px 36px;
@@ -633,13 +637,13 @@ INDEX_HTML = """<!DOCTYPE html>
             font-weight: 700;
             font-size: 1.05rem;
             cursor: pointer;
-            box-shadow: 0 10px 24px -6px rgba(47, 103, 153, 0.42);
+            box-shadow: 0 10px 24px -6px rgba(124, 58, 237, 0.5);
             transition: all 0.25s ease;
         }
 
         .btn-glass-primary:hover:not(:disabled) {
             transform: translateY(-2px) scale(1.01);
-            box-shadow: 0 14px 30px -6px rgba(47, 103, 153, 0.52);
+            box-shadow: 0 14px 30px -6px rgba(168, 85, 247, 0.6);
             border-color: rgba(255, 255, 255, 0.55);
         }
 
@@ -663,15 +667,15 @@ INDEX_HTML = """<!DOCTYPE html>
         }
 
         .btn-violet {
-            background: linear-gradient(135deg, #536ca8, #647bb4);
+            background: linear-gradient(135deg, #6d28d9, #8b5cf6);
             color: #ffffff;
-            border: 1px solid rgba(177, 196, 226, 0.36);
-            box-shadow: 0 8px 20px rgba(48, 72, 114, 0.32);
+            border: 1px solid rgba(196, 181, 253, 0.36);
+            box-shadow: 0 8px 20px rgba(109, 40, 217, 0.36);
         }
 
         .btn-violet:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 12px 26px rgba(48, 72, 114, 0.44);
+            box-shadow: 0 12px 26px rgba(109, 40, 217, 0.5);
         }
 
         .btn-secondary {
@@ -712,7 +716,7 @@ INDEX_HTML = """<!DOCTYPE html>
         }
 
         .progress-bar-bg {
-            background: rgba(15, 23, 42, 0.7);
+            background: rgba(25, 23, 34, 0.7);
             border-radius: var(--radius-pill);
             height: 12px;
             overflow: hidden;
@@ -722,8 +726,8 @@ INDEX_HTML = """<!DOCTYPE html>
         }
 
         .progress-bar-fill {
-            background: linear-gradient(90deg, #6686d4, var(--accent-cyan));
-            box-shadow: 0 0 16px rgba(101, 172, 196, 0.42);
+            background: linear-gradient(90deg, #8b5cf6, var(--accent-cyan));
+            box-shadow: 0 0 16px rgba(56, 189, 248, 0.42);
             width: 0%;
             height: 100%;
             transition: width 0.35s ease;
@@ -795,7 +799,7 @@ INDEX_HTML = """<!DOCTYPE html>
             overflow-y: auto;
             border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 20px;
-            background: rgba(10, 15, 28, 0.75);
+            background: rgba(25, 23, 34, 0.75);
             box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
             padding: 8px;
             display: flex;
@@ -821,8 +825,8 @@ INDEX_HTML = """<!DOCTYPE html>
         }
 
         .sub-row.active {
-            background: rgba(99, 102, 241, 0.18) !important;
-            border-color: rgba(99, 102, 241, 0.5) !important;
+            background: rgba(139, 92, 246, 0.18) !important;
+            border-color: rgba(139, 92, 246, 0.5) !important;
             border-left: 4px solid var(--accent-indigo) !important;
         }
 
@@ -846,17 +850,17 @@ INDEX_HTML = """<!DOCTYPE html>
             font-size: 0.98rem;
             color: var(--text-heading);
             width: 100%;
-            background: rgba(15, 23, 42, 0.5);
+            background: rgba(25, 23, 34, 0.6);
             border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 10px;
             padding: 8px 12px;
         }
 
         .sub-text-thai:focus {
-            background: rgba(15, 23, 42, 0.9);
+            background: rgba(30, 27, 42, 0.9);
             border-color: var(--accent-indigo);
             outline: none;
-            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.25);
         }
 
         .actions-bar {
@@ -867,7 +871,7 @@ INDEX_HTML = """<!DOCTYPE html>
         }
 
         :focus-visible {
-            outline: 3px solid rgba(101, 212, 232, 0.9);
+            outline: 3px solid rgba(56, 189, 248, 0.9);
             outline-offset: 3px;
         }
 
@@ -880,9 +884,7 @@ INDEX_HTML = """<!DOCTYPE html>
             body { padding: 16px 12px 32px; }
             .app-shell { gap: 16px; }
             .glass-panel { padding: 20px; border-radius: 20px; }
-            .glass-navbar { padding: 18px 20px; }
-            .brand-title { font-size: 1.25rem; }
-            .brand-subtitle { font-size: 0.82rem; }
+            .banner-title { font-size: 1.55rem; }
             .options-grid { grid-template-columns: 1fr; gap: 16px; }
             .dropzone-glass { padding: 30px 18px; }
             .actions-bar .btn { flex: 1 1 100%; }
@@ -907,28 +909,31 @@ INDEX_HTML = """<!DOCTYPE html>
     </div>
 
     <div class="app-shell">
-        <!-- 2. Glass Navigation Header -->
-        <header class="glass-panel glass-navbar">
-            <div class="brand-group">
-                <div class="brand-logo kanit-black">SF</div>
-                <div>
-                    <div class="brand-title kanit-bold">SubFynn Studio</div>
-                    <div class="brand-subtitle kanit-light">โปรแกรมสร้างซับไทยอัตโนมัติ (AI Thai Subtitle Generator)</div>
-                </div>
+        <!-- 2. Header Banner -->
+        <header class="header-banner">
+            <div class="banner-title-row">
+                <h1 class="banner-title kanit-bold">SubFynn - โปรแกรมสร้างซับไทยอัตโนมัติ</h1>
+                <span class="banner-badge kanit-semibold">SubFynn Glass Edition</span>
             </div>
-            <div class="nav-status-group">
-                <button class="status-pill kanit-medium" onclick="openIntroModal()" style="background: rgba(120, 150, 255, 0.22); border: 1px solid rgba(120, 150, 255, 0.45); color: #ffffff; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease;">🎬 ดูวิดีโอเปิดตัว (Intro)</button>
+            <p class="banner-desc kanit-light">อัปโหลดวิดีโอจากที่ไหนก็ได้ แล้วระบบจะถอดเสียงและแปลซับไทยให้อัตโนมัติ พร้อมฝังซับลงวิดีโอ</p>
+            <div class="banner-actions">
+                <button class="status-pill btn-intro-pill kanit-medium" onclick="openIntroModal()">ดูวิดีโอเปิดตัว (Intro)</button>
                 <span class="status-pill kanit-regular">● Engine Ready</span>
-                <span class="edition-badge kanit-semibold">💎 Liquid Glass Edition</span>
             </div>
         </header>
 
         <!-- 3. Upload & Configuration Glass Panel -->
         <main class="glass-panel">
             <div class="dropzone-glass" id="dropZone" onclick="document.getElementById('videoFile').click()">
-                <span class="upload-icon">🎬</span>
+                <div class="upload-icon-wrapper">
+                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent-cyan); filter: drop-shadow(0 4px 12px rgba(56, 189, 248, 0.35));">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                </div>
                 <h3 class="kanit-semibold">ลากไฟล์วิดีโอมาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์</h3>
-                <p class="kanit-light" style="color: var(--text-muted); font-size: 0.88rem; margin-top: 4px;">รองรับ MP4, MKV, MOV, AVI, WEBM, FLV, TS (สูงสุด 2GB)</p>
+                <p class="kanit-light" style="color: var(--text-muted); font-size: 0.88rem; margin-top: 4px;">รองรับ MP4, MKV, MOV, AVI, WEBM, FLV, TS</p>
                 <div class="file-info kanit-semibold" id="fileInfo"></div>
                 <input type="file" id="videoFile" accept="video/*,audio/*" style="display: none;" onchange="handleFileSelect(this.files[0])">
             </div>
@@ -937,44 +942,36 @@ INDEX_HTML = """<!DOCTYPE html>
                 <div class="option-group">
                     <label for="modelSelect" class="kanit-medium">ขนาดโมเดล Whisper (AI Speech-to-Text)</label>
                     <select id="modelSelect" class="kanit-regular">
-                        <option value="base" selected>Base (แนะนำทั่วไป - รวดเร็ว สมดุล)</option>
-                        <option value="tiny">Tiny (เร็วที่สุด ใช้ทรัพยากรน้อย)</option>
-                        <option value="small">Small (แม่นยำปานกลาง)</option>
-                        <option value="medium">Medium (แม่นยำสูง แนะนำสำหรับ JAV/ญี่ปุ่น)</option>
-                        <option value="large-v3">Large-v3 (แม่นยำสูงสุด ถอดเสียงคราง/กระซิบชัด)</option>
+                        <option value="large-v3" selected>Large-v3 (แม่นยำสูงสุด ถอดเสียงชัดเจน)</option>
                     </select>
                 </div>
                 <div class="option-group">
                     <label for="styleSelect" class="kanit-medium">สไตล์การแปลคำบรรยาย (Translation Style)</label>
                     <select id="styleSelect" class="kanit-regular">
-                        <option value="jav" selected>🔥 หนังผู้ใหญ่ / JAV 18+ (มาตรฐานแฟนซับ: เร่าร้อน เสียว เป็นธรรมชาติ)</option>
-                        <option value="jav_dirty">💥 หนังผู้ใหญ่ / JAV 18+ (สายดุดัน / หยาบคายได้เต็มที่: ควย หี เย็ด ซอยยับ แตกใน โคตรเสียว ไม่เซ็นเซอร์)</option>
-                        <option value="jav_hardcore">🔞 หนังผู้ใหญ่ / JAV 18+ (Hardcore ดิบเถื่อน หยาบคายขั้นสุด)</option>
-                        <option value="jav_sweet">💖 หนังผู้ใหญ่ / JAV 18+ (สายหวานอ้อน: เสียวจัง พี่คะ หนูไม่ไหวแล้ว)</option>
-                        <option value="general">🎬 ทั่วไป / ภาพยนตร์ (General / Cinematic)</option>
-                        <option value="anime">🌸 อนิเมะ / การ์ตูน (Anime & Manga)</option>
-                        <option value="drama">🎭 ดราม่า / ซีรีส์ (Drama & Emotional)</option>
+                        <option value="jav" selected>หนังผู้ใหญ่ / JAV 18+ (มาตรฐานแฟนซับ: เร่าร้อน เสียว เป็นธรรมชาติ)</option>
+                        <option value="jav_dirty">หนังผู้ใหญ่ / JAV 18+ (สายดุดัน / หยาบคายได้เต็มที่: ควย หี เย็ด ซอยยับ แตกใน โคตรเสียว ไม่เซ็นเซอร์)</option>
+                        <option value="jav_hardcore">หนังผู้ใหญ่ / JAV 18+ (Hardcore ดิบเถื่อน หยาบคายขั้นสุด)</option>
+                        <option value="jav_sweet">หนังผู้ใหญ่ / JAV 18+ (สายหวานอ้อน: เสียวจัง พี่คะ หนูไม่ไหวแล้ว)</option>
+                        <option value="general">ทั่วไป / ภาพยนตร์ (General / Cinematic)</option>
+                        <option value="anime">อนิเมะ / การ์ตูน (Anime & Manga)</option>
+                        <option value="drama">ดราม่า / ซีรีส์ (Drama & Emotional)</option>
                     </select>
                 </div>
                 <div class="option-group">
                     <label for="geminiModelSelect" class="kanit-medium">โมเดล AI แปลภาษา (Translation Model)</label>
                     <select id="geminiModelSelect" class="kanit-regular">
-                        <option value="gemini-2.5-flash" selected>Gemini 2.5 Flash (เร็ว ฉลาด ได้อารมณ์ - แนะนำ)</option>
-                        <option value="gemini-2.5-pro">Gemini 2.5 Pro (แปลได้อารมณ์ลึกซึ้งขั้นสุด - พรีเมียม 18+)</option>
-                        <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite (เร็วขั้นสุด ลื่นไหล ประหยัดโควตา)</option>
-                        <option value="gemini-2.0-flash">Gemini 2.0 Flash (เสถียรและรวดเร็วสูง)</option>
-                        <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash-Lite (เบาและรวดเร็วสูง)</option>
-                        <option value="gemini-1.5-flash">Gemini 1.5 Flash (ประหยัดโควตา เข้าถึงได้ทุกบัญชี)</option>
-                        <option value="gemini-1.5-pro">Gemini 1.5 Pro (วิเคราะห์ละเอียด แม่นยำ)</option>
+                        <option value="gemini-2.5-flash" selected>Gemini 2.5 Flash (เร็ว แม่นยำสูง แนะนำ)</option>
+                        <option value="gemini-2.5-pro">Gemini 2.5 Pro (แปลลึกซึ้ง บริบทแม่นยำ)</option>
+                        <option value="gemini-3.5-live-translate-preview">Gemini Live Translate (3.5 Preview แปลบทสนทนาสด)</option>
                     </select>
                 </div>
                 <div class="option-group">
                     <label for="embedModeSelect" class="kanit-medium">เอาซับใส่คลิปวิดีโอทันที (Auto-embed Video)</label>
                     <select id="embedModeSelect" class="kanit-regular">
-                        <option value="burn" selected>🎬 ฝังซับติดภาพถาวร (Hardsub Burn-in - แนะนำ)</option>
-                        <option value="soft">⚡ ฝังซับในไฟล์เร็ว 1 วิ (Fast Softsub - เปิด/ปิดได้ ไม่เสียความคมชัด)</option>
-                        <option value="both">✨ ทำทั้ง 2 แบบ (ทั้ง Hardsub และ Softsub)</option>
-                        <option value="none">📄 สร้างเฉพาะไฟล์ซับ (.SRT / .VTT)</option>
+                        <option value="burn" selected>ฝังซับติดภาพถาวร (Hardsub Burn-in - แนะนำ)</option>
+                        <option value="soft">ฝังซับในไฟล์เร็ว 1 วิ (Fast Softsub - เปิด/ปิดได้ ไม่เสียความคมชัด)</option>
+                        <option value="both">ทำทั้ง 2 แบบ (ทั้ง Hardsub และ Softsub)</option>
+                        <option value="none">สร้างเฉพาะไฟล์ซับ (.SRT / .VTT)</option>
                     </select>
                 </div>
                 <div class="option-group">
@@ -991,22 +988,14 @@ INDEX_HTML = """<!DOCTYPE html>
                     </select>
                 </div>
                 <div class="option-group">
-                    <label for="geminiKey" class="kanit-medium">Google Gemini API Key (ไม่บังคับ - ปลดล็อกการแปล 18+ ขั้นสุด)</label>
+                    <label for="geminiKey" class="kanit-medium">Google Gemini API Key (ไม่บังคับ - ปลดล็อกการแปลขั้นสุด)</label>
                     <input type="password" id="geminiKey" class="kanit-regular" placeholder="วาง API Key หรือเว้นว่างเพื่อใช้ระบบแปล JAV ฟรี">
-                </div>
-            </div>
-
-            <div class="banner-jav-glass kanit-regular">
-                <span style="font-size: 1.8rem;">🔞</span>
-                <div style="font-size: 0.92rem; line-height: 1.5;">
-                    <strong class="kanit-semibold" style="color: #ffffff;">โหมดแปล JAV / หนังผู้ใหญ่ 18+ ได้อารมณ์สมจริง:</strong>
-                    <span class="kanit-light" style="color: rgba(255, 255, 255, 0.85);"> ปรับสำนวนซับไทยให้อินเนอร์มาเต็ม (เสียว, จะเสร็จแล้ว, อย่านะ, มิดด้าม, ควย, หี, แตกใน) พร้อมระบบ Anti-Hallucination ตัดเสียงครางวนซ้ำ และปลดล็อกระบบกรองคำของ Gemini AI</span>
                 </div>
             </div>
 
             <div style="margin-top: 28px; text-align: center;">
                 <button class="btn btn-glass-primary kanit-bold" id="startBtn" onclick="startProcessing()" disabled>
-                    ✨ เริ่มสร้างซับไทย (Generate Thai Subtitles)
+                    เริ่มสร้างซับไทย (Generate Thai Subtitles)
                 </button>
             </div>
 
@@ -1020,7 +1009,7 @@ INDEX_HTML = """<!DOCTYPE html>
 
         <!-- 4. Result Preview & Subtitle Editor Glass Panel -->
         <section class="glass-panel result-section" id="resultCard">
-            <h2 class="kanit-bold" style="margin-bottom: 20px; font-size: 1.35rem; color: #ffffff;">🎬 ตัวอย่างวิดีโอและคำบรรยายซับไทย</h2>
+            <h2 class="kanit-bold" style="margin-bottom: 20px; font-size: 1.35rem; color: #ffffff;">ตัวอย่างวิดีโอและคำบรรยายซับไทย</h2>
             <div class="preview-layout">
                 <div class="video-container">
                     <video id="videoPlayer" controls playsinline></video>
@@ -1029,9 +1018,9 @@ INDEX_HTML = """<!DOCTYPE html>
                     <div class="tools-panel">
                         <div class="shift-tools">
                             <span class="kanit-medium" style="font-size: 0.85rem; color: var(--text-secondary);">ปรับเวลา:</span>
-                            <button class="btn btn-secondary btn-sm kanit-medium" onclick="shiftSubtitles(-0.5)" title="เลื่อนซับเร็วขึ้น 0.5 วินาที">⏪ -0.5s</button>
-                            <button class="btn btn-secondary btn-sm kanit-medium" onclick="shiftSubtitles(0.5)" title="เลื่อนซับช้าลง 0.5 วินาที">⏩ +0.5s</button>
-                            <button class="btn btn-secondary btn-sm kanit-medium" onclick="promptCustomShift()">⏱️ กำหนดเอง...</button>
+                            <button class="btn btn-secondary btn-sm kanit-medium" onclick="shiftSubtitles(-0.5)" title="เลื่อนซับเร็วขึ้น 0.5 วินาที">-0.5s</button>
+                            <button class="btn btn-secondary btn-sm kanit-medium" onclick="shiftSubtitles(0.5)" title="เลื่อนซับช้าลง 0.5 วินาที">+0.5s</button>
+                            <button class="btn btn-secondary btn-sm kanit-medium" onclick="promptCustomShift()">กำหนดเอง...</button>
                         </div>
                         <div style="display: flex; gap: 6px; align-items: center;">
                             <span id="subCount" class="kanit-semibold" style="font-size: 0.88rem; color: #38bdf8; font-weight: 600;">0 ท่อน</span>
@@ -1042,11 +1031,11 @@ INDEX_HTML = """<!DOCTYPE html>
             </div>
 
             <div class="actions-bar">
-                <a class="btn btn-emerald kanit-semibold" id="downloadVideoBtn" href="#" style="text-decoration: none;">🎬 ดาวน์โหลดวิดีโอพร้อมซับ (Subtitled Video MP4)</a>
-                <button class="btn btn-secondary kanit-medium" onclick="downloadSRT()">📥 ดาวน์โหลดไฟล์ .SRT</button>
-                <button class="btn btn-secondary kanit-medium" onclick="downloadVTT()">📥 ดาวน์โหลดไฟล์ .VTT</button>
-                <button class="btn btn-violet kanit-semibold" id="burnBtn" onclick="burnSubtitles()">🎬 ฝังซับใหม่ (Custom Burn)</button>
-                <button class="btn btn-secondary kanit-medium" onclick="copyAllText()">📋 คัดลอกข้อความทั้งหมด</button>
+                <a class="btn btn-emerald kanit-semibold" id="downloadVideoBtn" href="#" style="text-decoration: none;">ดาวน์โหลดวิดีโอพร้อมซับ (Subtitled Video MP4)</a>
+                <button class="btn btn-secondary kanit-medium" onclick="downloadSRT()">ดาวน์โหลดไฟล์ .SRT</button>
+                <button class="btn btn-secondary kanit-medium" onclick="downloadVTT()">ดาวน์โหลดไฟล์ .VTT</button>
+                <button class="btn btn-violet kanit-semibold" id="burnBtn" onclick="burnSubtitles()">ฝังซับใหม่ (Custom Burn)</button>
+                <button class="btn btn-secondary kanit-medium" onclick="copyAllText()">คัดลอกข้อความทั้งหมด</button>
             </div>
 
             <div class="progress-box" id="burnProgressBox" style="margin-top: 18px;">
@@ -1061,12 +1050,9 @@ INDEX_HTML = """<!DOCTYPE html>
         <div id="introModal" style="display: none; position: fixed; inset: 0; background: rgba(5, 10, 20, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;" onclick="if(event.target===this) closeIntroModal()">
             <div class="glass-panel" style="max-width: 860px; width: 100%; padding: 24px; border-radius: 24px; position: relative; box-shadow: 0 25px 60px rgba(0,0,0,0.7);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size: 1.5rem;">🎬</span>
-                        <div>
-                            <h3 class="kanit-bold" style="font-size: 1.25rem; color: #ffffff; margin: 0;">SubFynn — Launch Intro Video</h3>
-                            <p class="kanit-light" style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">ความยาว 3.5 วินาที • Animated by HyperFrames • Kanit Typography</p>
-                        </div>
+                    <div>
+                        <h3 class="kanit-bold" style="font-size: 1.25rem; color: #ffffff; margin: 0;">SubFynn — Launch Intro Video</h3>
+                        <p class="kanit-light" style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">ความยาว 3.5 วินาที • Animated by HyperFrames • Kanit Typography</p>
                     </div>
                     <button onclick="closeIntroModal()" class="btn btn-secondary btn-sm kanit-medium" style="border-radius: 50%; width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer;">✕</button>
                 </div>
@@ -1076,27 +1062,14 @@ INDEX_HTML = """<!DOCTYPE html>
                     </video>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; flex-wrap: wrap; gap: 10px;">
-                    <div class="kanit-light-italic" style="font-size: 0.85rem; color: var(--accent-cyan);">✨ วิดีโอเปิดตัวพร้อมเสียงและแอนิเมชัน 3D Glassmorphism</div>
+                    <div class="kanit-light-italic" style="font-size: 0.85rem; color: var(--accent-cyan);">วิดีโอเปิดตัวพร้อมเสียงและแอนิเมชัน 3D Glassmorphism</div>
                     <div style="display: flex; gap: 8px;">
-                        <a href="/assets/subfynn_intro.mp4" download="subfynn_intro.mp4" class="btn btn-secondary btn-sm kanit-medium" style="text-decoration: none;">📥 ดาวน์โหลด MP4</a>
-                        <button onclick="const p=document.getElementById('introVideoPlayer'); if(p){p.currentTime=0; p.play();}" class="btn btn-emerald btn-sm kanit-medium">🔄 เล่นซ้ำ</button>
+                        <a href="/assets/subfynn_intro.mp4" download="subfynn_intro.mp4" class="btn btn-secondary btn-sm kanit-medium" style="text-decoration: none;">ดาวน์โหลด MP4</a>
+                        <button onclick="const p=document.getElementById('introVideoPlayer'); if(p){p.currentTime=0; p.play();}" class="btn btn-emerald btn-sm kanit-medium">เล่นซ้ำ</button>
                     </div>
                 </div>
             </div>
         </div>
-
-        <footer style="text-align: center; margin-top: 28px; padding-bottom: 20px;">
-            <div class="kanit-extralight" style="font-size: 0.85rem; color: var(--text-muted);">
-                SubFynn Studio — AI Thai Subtitle Generator • Powered by faster-whisper &amp; Google Gemini AI
-            </div>
-            <div class="kanit-thin-italic" style="font-size: 0.78rem; color: var(--accent-cyan); margin-top: 4px; opacity: 0.85;">
-                Typography System: Kanit Google Font (All 18 Weights &amp; Styles Active)
-            </div>
-        </footer>
-    </div>
-                <div class="progress-status" id="burnStatus">กำลังฝังซับไตเติล...</div>
-            </div>
-        </section>
     </div>
 
     <script>
