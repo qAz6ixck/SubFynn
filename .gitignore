@@ -33,6 +33,11 @@ data/
 *.avi
 *.webm
 
+# Keep SubFynn intro launch video
+!subfynn_intro.mp4
+!assets/subfynn_intro.mp4
+!public/assets/subfynn_intro.mp4
+
 # Binaries & Archives (>100MB exceeds GitHub limits)
 ffmpeg.exe
 *.exe
@@ -42,9 +47,12 @@ ffmpeg.exe
 # Dependencies & temporary workspace
 node_modules/
 test_media_workspace/
+.hyperframes/
 
 # IDE / System
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+.gemini/
+.codex/

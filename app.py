@@ -162,49 +162,164 @@ INDEX_HTML = """<!DOCTYPE html>
     <title>SubFynn Studio — โปรแกรมสร้างซับไทยอัตโนมัติ (AI Thai Subtitle Generator)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <style>
+        /* Kanit Typography Classes */
+        .kanit-thin {
+          font-family: "Kanit", sans-serif;
+          font-weight: 100;
+          font-style: normal;
+        }
+
+        .kanit-extralight {
+          font-family: "Kanit", sans-serif;
+          font-weight: 200;
+          font-style: normal;
+        }
+
+        .kanit-light {
+          font-family: "Kanit", sans-serif;
+          font-weight: 300;
+          font-style: normal;
+        }
+
+        .kanit-regular {
+          font-family: "Kanit", sans-serif;
+          font-weight: 400;
+          font-style: normal;
+        }
+
+        .kanit-medium {
+          font-family: "Kanit", sans-serif;
+          font-weight: 500;
+          font-style: normal;
+        }
+
+        .kanit-semibold {
+          font-family: "Kanit", sans-serif;
+          font-weight: 600;
+          font-style: normal;
+        }
+
+        .kanit-bold {
+          font-family: "Kanit", sans-serif;
+          font-weight: 700;
+          font-style: normal;
+        }
+
+        .kanit-extrabold {
+          font-family: "Kanit", sans-serif;
+          font-weight: 800;
+          font-style: normal;
+        }
+
+        .kanit-black {
+          font-family: "Kanit", sans-serif;
+          font-weight: 900;
+          font-style: normal;
+        }
+
+        .kanit-thin-italic {
+          font-family: "Kanit", sans-serif;
+          font-weight: 100;
+          font-style: italic;
+        }
+
+        .kanit-extralight-italic {
+          font-family: "Kanit", sans-serif;
+          font-weight: 200;
+          font-style: italic;
+        }
+
+        .kanit-light-italic {
+          font-family: "Kanit", sans-serif;
+          font-weight: 300;
+          font-style: italic;
+        }
+
+        .kanit-regular-italic {
+          font-family: "Kanit", sans-serif;
+          font-weight: 400;
+          font-style: italic;
+        }
+
+        .kanit-medium-italic {
+          font-family: "Kanit", sans-serif;
+          font-weight: 500;
+          font-style: italic;
+        }
+
+        .kanit-semibold-italic {
+          font-family: "Kanit", sans-serif;
+          font-weight: 600;
+          font-style: italic;
+        }
+
+        .kanit-bold-italic {
+          font-family: "Kanit", sans-serif;
+          font-weight: 700;
+          font-style: italic;
+        }
+
+        .kanit-extrabold-italic {
+          font-family: "Kanit", sans-serif;
+          font-weight: 800;
+          font-style: italic;
+        }
+
+        .kanit-black-italic {
+          font-family: "Kanit", sans-serif;
+          font-weight: 900;
+          font-style: italic;
+        }
+
         :root {
-            --bg-deep: #060913;
-            --glass-surface: rgba(255, 255, 255, 0.06);
-            --glass-surface-hover: rgba(255, 255, 255, 0.10);
-            --glass-surface-active: rgba(255, 255, 255, 0.14);
-            --glass-border: rgba(255, 255, 255, 0.13);
-            --glass-border-hover: rgba(255, 255, 255, 0.28);
-            --glass-highlight: rgba(255, 255, 255, 0.30);
-            --accent-indigo: #6366f1;
-            --accent-pink: #ec4899;
-            --accent-cyan: #06b6d4;
-            --accent-emerald: #10b981;
-            --text-heading: #FFFFFF;
-            --text-primary: #F8FAFC;
-            --text-body: rgba(255, 255, 255, 0.82);
-            --text-secondary: #94A3B8;
-            --text-muted: rgba(255, 255, 255, 0.60);
+            --bg-deep: #09121f;
+            --glass-surface: rgba(20, 32, 50, 0.82);
+            --glass-surface-hover: rgba(26, 40, 60, 0.90);
+            --glass-surface-active: rgba(32, 48, 70, 0.94);
+            --glass-border: rgba(195, 213, 235, 0.20);
+            --glass-border-hover: rgba(195, 213, 235, 0.36);
+            --glass-highlight: rgba(255, 255, 255, 0.24);
+            --accent-indigo: #7896ff;
+            --accent-pink: #bb9bff;
+            --accent-cyan: #65d4e8;
+            --accent-emerald: #4ed2a0;
+            --text-heading: #f7f9fd;
+            --text-primary: #f1f5fb;
+            --text-body: #e0e8f3;
+            --text-secondary: #bdcadd;
+            --text-muted: #aebbd0;
             --radius-card: 24px;
             --radius-input: 14px;
             --radius-pill: 9999px;
-            --glass-shadow: 0 24px 60px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            --glass-shadow: 0 20px 48px rgba(2, 8, 18, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.14);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Inter', 'IBM Plex Sans Thai', 'Kanit', sans-serif;
+            font-family: 'Kanit', sans-serif;
+        }
+
+        body, button, input, select, textarea {
+            font-family: 'Kanit', sans-serif;
         }
 
         body {
             background-color: var(--bg-deep);
             background-image: 
-                radial-gradient(at 0% 0%, rgba(30, 27, 75, 0.75) 0px, transparent 55%),
-                radial-gradient(at 100% 0%, rgba(59, 7, 100, 0.65) 0px, transparent 50%),
-                radial-gradient(at 50% 50%, rgba(46, 16, 101, 0.45) 0px, transparent 60%),
-                radial-gradient(at 0% 100%, rgba(15, 23, 42, 0.85) 0px, transparent 55%),
-                radial-gradient(at 100% 100%, rgba(30, 27, 75, 0.75) 0px, transparent 55%);
+                radial-gradient(at 0% 0%, rgba(64, 91, 145, 0.34) 0px, transparent 55%),
+                radial-gradient(at 100% 0%, rgba(39, 116, 139, 0.24) 0px, transparent 50%),
+                radial-gradient(at 50% 50%, rgba(60, 80, 122, 0.18) 0px, transparent 60%),
+                radial-gradient(at 0% 100%, rgba(15, 31, 50, 0.7) 0px, transparent 55%),
+                radial-gradient(at 100% 100%, rgba(35, 66, 88, 0.28) 0px, transparent 55%);
             background-attachment: fixed;
             background-size: cover;
             color: var(--text-body);
+            font-size: 16px;
+            line-height: 1.65;
             min-height: 100vh;
             overflow-x: hidden;
             position: relative;
@@ -224,14 +339,14 @@ INDEX_HTML = """<!DOCTYPE html>
             position: absolute;
             border-radius: 50%;
             filter: blur(110px);
-            opacity: 0.55;
+            opacity: 0.30;
             animation: floatOrb 18s ease-in-out infinite alternate;
         }
 
         .orb-1 {
             width: 540px;
             height: 540px;
-            background: radial-gradient(circle, rgba(99, 102, 241, 0.7), transparent 70%);
+            background: radial-gradient(circle, rgba(111, 151, 225, 0.55), transparent 70%);
             top: -100px;
             left: -100px;
         }
@@ -239,7 +354,7 @@ INDEX_HTML = """<!DOCTYPE html>
         .orb-2 {
             width: 480px;
             height: 480px;
-            background: radial-gradient(circle, rgba(236, 72, 153, 0.65), transparent 70%);
+            background: radial-gradient(circle, rgba(76, 168, 177, 0.44), transparent 70%);
             bottom: -100px;
             right: -80px;
             animation-delay: -6s;
@@ -248,7 +363,7 @@ INDEX_HTML = """<!DOCTYPE html>
         .orb-3 {
             width: 400px;
             height: 400px;
-            background: radial-gradient(circle, rgba(6, 182, 212, 0.55), transparent 70%);
+            background: radial-gradient(circle, rgba(114, 139, 196, 0.34), transparent 70%);
             top: 45%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -275,15 +390,15 @@ INDEX_HTML = """<!DOCTYPE html>
         /* 3. Glass Panels */
         .glass-panel {
             background: var(--glass-surface);
-            backdrop-filter: blur(24px) saturate(180%);
-            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            backdrop-filter: blur(28px) saturate(135%);
+            -webkit-backdrop-filter: blur(28px) saturate(135%);
             border: 1px solid var(--glass-border);
             border-top: 1px solid var(--glass-highlight);
             border-left: 1px solid var(--glass-highlight);
             border-radius: var(--radius-card);
             box-shadow: var(--glass-shadow);
-            padding: 30px;
-            transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+            padding: 32px;
+            transition: border-color 0.2s ease, background-color 0.2s ease;
         }
 
         .glass-panel:hover {
@@ -310,14 +425,14 @@ INDEX_HTML = """<!DOCTYPE html>
             width: 46px;
             height: 46px;
             border-radius: 14px;
-            background: linear-gradient(135deg, var(--accent-indigo), var(--accent-pink));
+            background: linear-gradient(135deg, #5274c4, #398fa7);
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 800;
             font-size: 1.3rem;
             color: #ffffff;
-            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.5);
+            box-shadow: 0 8px 24px rgba(78, 126, 180, 0.28);
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
@@ -432,8 +547,8 @@ INDEX_HTML = """<!DOCTYPE html>
         }
 
         label {
-            font-size: 0.88rem;
-            font-weight: 500;
+            font-size: 0.96rem;
+            font-weight: 600;
             color: var(--text-secondary);
         }
 
@@ -446,7 +561,8 @@ INDEX_HTML = """<!DOCTYPE html>
             border-radius: var(--radius-input);
             padding: 13px 16px;
             color: var(--text-heading);
-            font-size: 0.95rem;
+            font-size: 1rem;
+            line-height: 1.5;
             outline: none;
             transition: all 0.2s ease;
             box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
@@ -494,7 +610,7 @@ INDEX_HTML = """<!DOCTYPE html>
         }
 
         .btn-glass-primary {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.95), rgba(236, 72, 153, 0.95));
+            background: linear-gradient(135deg, #5578c8, #397e9d);
             border: 1px solid rgba(255, 255, 255, 0.35);
             border-radius: 16px;
             padding: 15px 36px;
@@ -502,13 +618,13 @@ INDEX_HTML = """<!DOCTYPE html>
             font-weight: 700;
             font-size: 1.05rem;
             cursor: pointer;
-            box-shadow: 0 12px 28px -6px rgba(99, 102, 241, 0.6);
+            box-shadow: 0 10px 24px -6px rgba(47, 103, 153, 0.42);
             transition: all 0.25s ease;
         }
 
         .btn-glass-primary:hover:not(:disabled) {
             transform: translateY(-2px) scale(1.01);
-            box-shadow: 0 18px 38px -6px rgba(236, 72, 153, 0.75);
+            box-shadow: 0 14px 30px -6px rgba(47, 103, 153, 0.52);
             border-color: rgba(255, 255, 255, 0.55);
         }
 
@@ -532,15 +648,15 @@ INDEX_HTML = """<!DOCTYPE html>
         }
 
         .btn-violet {
-            background: linear-gradient(135deg, #7c3aed, #ec4899);
+            background: linear-gradient(135deg, #536ca8, #647bb4);
             color: #ffffff;
-            border: 1px solid rgba(236, 72, 153, 0.4);
-            box-shadow: 0 8px 24px rgba(236, 72, 153, 0.35);
+            border: 1px solid rgba(177, 196, 226, 0.36);
+            box-shadow: 0 8px 20px rgba(48, 72, 114, 0.32);
         }
 
         .btn-violet:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 12px 30px rgba(236, 72, 153, 0.55);
+            box-shadow: 0 12px 26px rgba(48, 72, 114, 0.44);
         }
 
         .btn-secondary {
@@ -591,8 +707,8 @@ INDEX_HTML = """<!DOCTYPE html>
         }
 
         .progress-bar-fill {
-            background: linear-gradient(90deg, var(--accent-indigo), var(--accent-pink), var(--accent-cyan));
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.8);
+            background: linear-gradient(90deg, #6686d4, var(--accent-cyan));
+            box-shadow: 0 0 16px rgba(101, 172, 196, 0.42);
             width: 0%;
             height: 100%;
             transition: width 0.35s ease;
@@ -734,6 +850,37 @@ INDEX_HTML = """<!DOCTYPE html>
             gap: 12px;
             margin-top: 24px;
         }
+
+        :focus-visible {
+            outline: 3px solid rgba(101, 212, 232, 0.9);
+            outline-offset: 3px;
+        }
+
+        .sub-text-thai,
+        .sub-text-orig {
+            line-height: 1.65;
+        }
+
+        @media (max-width: 640px) {
+            body { padding: 16px 12px 32px; }
+            .app-shell { gap: 16px; }
+            .glass-panel { padding: 20px; border-radius: 20px; }
+            .glass-navbar { padding: 18px 20px; }
+            .brand-title { font-size: 1.25rem; }
+            .brand-subtitle { font-size: 0.82rem; }
+            .options-grid { grid-template-columns: 1fr; gap: 16px; }
+            .dropzone-glass { padding: 30px 18px; }
+            .actions-bar .btn { flex: 1 1 100%; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -755,6 +902,7 @@ INDEX_HTML = """<!DOCTYPE html>
                 </div>
             </div>
             <div class="nav-status-group">
+                <button class="status-pill kanit-medium" onclick="playIntroVideo()" style="background: rgba(120, 150, 255, 0.22); border: 1px solid rgba(120, 150, 255, 0.45); color: #ffffff; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease;">🎬 ดูวิดีโอเปิดตัว (Intro)</button>
                 <span class="status-pill">● Engine Ready</span>
                 <span class="edition-badge">💎 Liquid Glass Edition</span>
             </div>
@@ -1265,6 +1413,20 @@ INDEX_HTML = """<!DOCTYPE html>
             }
         }
 
+        function playIntroVideo() {
+            const resSec = document.getElementById('resultSection');
+            const vp = document.getElementById('videoPlayer');
+            if (resSec && vp) {
+                resSec.style.display = 'block';
+                vp.src = '/assets/subfynn_intro.mp4';
+                vp.currentTime = 0;
+                vp.play().catch(() => {});
+                resSec.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                window.open('/assets/subfynn_intro.mp4', '_blank');
+            }
+        }
+
         function copyAllText() {
             const allText = currentSegments.map(s => s.thai_text || s.text).join('\\n');
             navigator.clipboard.writeText(allText).then(() => {
@@ -1306,6 +1468,16 @@ class AppRequestHandler(BaseHTTPRequestHandler):
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
+            return
+
+        if path in ("/subfynn_intro.mp4", "/assets/subfynn_intro.mp4"):
+            intro_path = os.path.join(BASE_DIR, "assets", "subfynn_intro.mp4")
+            if not os.path.isfile(intro_path):
+                intro_path = os.path.join(BASE_DIR, "subfynn_intro.mp4")
+            if os.path.isfile(intro_path):
+                self.serve_file_with_range(intro_path, "video/mp4")
+                return
+            self.send_error(404, "Intro video not found")
             return
 
         if path.startswith("/media/"):

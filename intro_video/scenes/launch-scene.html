@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+      <style>
+        @font-face {
+          font-family: 'Kanit';
+          font-weight: 400;
+          font-style: normal;
+          src: url('./fonts/kanit-regular.ttf') format('truetype');
+        }
+        @font-face {
+          font-family: 'Kanit';
+          font-weight: 600;
+          font-style: normal;
+          src: url('./fonts/kanit-semibold.ttf') format('truetype');
+        }
+        @font-face {
+          font-family: 'Kanit';
+          font-weight: 700;
+          font-style: normal;
+          src: url('./fonts/kanit-bold.ttf') format('truetype');
+        }
+
+        #root {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+          background: radial-gradient(circle at 50% 45%, #182848 0%, #09121f 70%, #050b14 100%);
+          font-family: 'Kanit', sans-serif;
+          color: #f1f5fb;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .ambient-glow {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(120px);
+          pointer-events: none;
+        }
+
+        .glow-1 {
+          width: 650px;
+          height: 650px;
+          background: radial-gradient(circle, rgba(120, 150, 255, 0.45) 0%, transparent 70%);
+          top: 10%;
+          left: 15%;
+        }
+
+        .glow-2 {
+          width: 600px;
+          height: 600px;
+          background: radial-gradient(circle, rgba(101, 212, 232, 0.4) 0%, transparent 70%);
+          bottom: 10%;
+          right: 15%;
+        }
+
+        .soundwave-box {
+          position: absolute;
+          top: 75px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          height: 48px;
+        }
+
+        .wave-bar {
+          width: 5px;
+          height: 36px;
+          background: linear-gradient(180deg, #65d4e8, #7896ff);
+          border-radius: 4px;
+          transform-origin: center;
+        }
+
+        .brand-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 12px;
+          padding: 10px 26px;
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(195, 213, 235, 0.25);
+          border-radius: 9999px;
+          font-size: 24px;
+          font-weight: 600;
+          color: #65d4e8;
+          letter-spacing: 1.5px;
+          backdrop-filter: blur(16px);
+          margin-bottom: 24px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        }
+
+        .logo-row {
+          display: flex;
+          align-items: center;
+          gap: 26px;
+          margin-bottom: 16px;
+        }
+
+        .logo-icon-box {
+          width: 106px;
+          height: 106px;
+          border-radius: 30px;
+          background: linear-gradient(135deg, #7896ff 0%, #bb9bff 50%, #65d4e8 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 16px 40px rgba(120, 150, 255, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.45);
+        }
+
+        .logo-icon-svg {
+          width: 62px;
+          height: 62px;
+          fill: white;
+        }
+
+        .brand-title {
+          font-size: 116px;
+          font-weight: 700;
+          line-height: 1.05;
+          letter-spacing: -1px;
+          background: linear-gradient(135deg, #ffffff 15%, #9ab3ff 55%, #65d4e8 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          text-shadow: 0 20px 60px rgba(120, 150, 255, 0.4);
+        }
+
+        .brand-tagline {
+          font-size: 34px;
+          font-weight: 400;
+          color: #d1dded;
+          letter-spacing: 0.5px;
+          margin-bottom: 34px;
+          text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .caption-preview-box {
+          width: 900px;
+          padding: 24px 40px;
+          background: rgba(14, 25, 43, 0.88);
+          border: 1px solid rgba(195, 213, 235, 0.28);
+          border-radius: 22px;
+          backdrop-filter: blur(20px);
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .timecode-label {
+          font-family: monospace;
+          font-size: 22px;
+          color: #65d4e8;
+          letter-spacing: 1.8px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .caption-text {
+          font-size: 34px;
+          font-weight: 600;
+          color: #ffffff;
+          text-align: center;
+          line-height: 1.35;
+          text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+        }
+
+        .feature-pills {
+          display: flex;
+          gap: 16px;
+          margin-top: 32px;
+        }
+
+        .pill {
+          padding: 10px 24px;
+          border-radius: 9999px;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          font-size: 20px;
+          font-weight: 400;
+          color: #e0e8f3;
+          backdrop-filter: blur(10px);
+        }
+      </style>
+
+      <div id="root" data-composition-id="launch-scene" data-width="1920" data-height="1080">
+        <div class="ambient-glow glow-1" id="glow1"></div>
+        <div class="ambient-glow glow-2" id="glow2"></div>
+
+        <div class="soundwave-box" id="soundwave">
+          <div class="wave-bar" id="wb1"></div>
+          <div class="wave-bar" id="wb2"></div>
+          <div class="wave-bar" id="wb3"></div>
+          <div class="wave-bar" id="wb4"></div>
+          <div class="wave-bar" id="wb5"></div>
+          <div class="wave-bar" id="wb6"></div>
+          <div class="wave-bar" id="wb7"></div>
+          <div class="wave-bar" id="wb8"></div>
+        </div>
+
+        <div class="brand-badge" id="badge">
+          <span>⚡</span>
+          <span>NEXT-GEN AI THAI SUBTITLE ENGINE</span>
+        </div>
+
+        <div class="logo-row" id="logoRow">
+          <div class="logo-icon-box" id="logoIcon">
+            <svg class="logo-icon-svg" viewBox="0 0 24 24">
+              <path d="M4 6H20V16H13L9 20V16H4V6ZM6 8V14H9.83L11 15.17V14H18V8H6ZM8 10H16V12H8V10Z"/>
+            </svg>
+          </div>
+          <div class="brand-title" id="title">SubFynn</div>
+        </div>
+
+        <div class="brand-tagline" id="tagline">
+          สร้างคำบรรยายซับไทยอัตโนมัติ แม่นยำ รวดเร็ว พร้อมใช้งานทันที
+        </div>
+
+        <div class="caption-preview-box" id="captionBox">
+          <div class="timecode-label" id="timecode">
+            <span>🔴 REC</span>
+            <span>00:00:01,250 ➔ 00:00:03,500</span>
+          </div>
+          <div class="caption-text" id="captionText">
+            "แปลและฝังซับไทยอัตโนมัติด้วย AI ความเร็วสูง สวยคมชัดทุกแพลตฟอร์ม"
+          </div>
+        </div>
+
+        <div class="feature-pills" id="pills">
+          <div class="pill">🚀 Faster-Whisper</div>
+          <div class="pill">✨ Gemini 2.5 Flash / Pro</div>
+          <div class="pill">🎬 4K / 60FPS Burn-in</div>
+          <div class="pill">🌐 Web & Cloud Ready</div>
+        </div>
+      </div>
+
+      <script>
+        const tl = gsap.timeline({ paused: true });
+
+        // Waveform staggered entrance & motion
+        tl.fromTo("#wb1", { scaleY: 0.2 }, { scaleY: 1.2, duration: 0.8, yoyo: true, repeat: 3, ease: "sine.inOut" }, 0.1);
+        tl.fromTo("#wb2", { scaleY: 0.4 }, { scaleY: 1.6, duration: 0.7, yoyo: true, repeat: 3, ease: "sine.inOut" }, 0.15);
+        tl.fromTo("#wb3", { scaleY: 0.3 }, { scaleY: 2.1, duration: 0.6, yoyo: true, repeat: 4, ease: "sine.inOut" }, 0.2);
+        tl.fromTo("#wb4", { scaleY: 0.5 }, { scaleY: 2.4, duration: 0.65, yoyo: true, repeat: 4, ease: "sine.inOut" }, 0.12);
+        tl.fromTo("#wb5", { scaleY: 0.3 }, { scaleY: 2.2, duration: 0.7, yoyo: true, repeat: 4, ease: "sine.inOut" }, 0.18);
+        tl.fromTo("#wb6", { scaleY: 0.4 }, { scaleY: 1.8, duration: 0.6, yoyo: true, repeat: 4, ease: "sine.inOut" }, 0.22);
+        tl.fromTo("#wb7", { scaleY: 0.2 }, { scaleY: 1.3, duration: 0.75, yoyo: true, repeat: 3, ease: "sine.inOut" }, 0.25);
+        tl.fromTo("#wb8", { scaleY: 0.3 }, { scaleY: 1.0, duration: 0.8, yoyo: true, repeat: 3, ease: "sine.inOut" }, 0.3);
+
+        // Badge & Logo entrance
+        tl.fromTo("#badge", { opacity: 0, y: -25, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: "power3.out" }, 0.1);
+        tl.fromTo("#logoIcon", { opacity: 0, scale: 0.3, rotation: -20 }, { opacity: 1, scale: 1, rotation: 0, duration: 0.65, ease: "back.out(1.8)" }, 0.25);
+        tl.fromTo("#title", { opacity: 0, x: 45 }, { opacity: 1, x: 0, duration: 0.65, ease: "power3.out" }, 0.35);
+        tl.fromTo("#tagline", { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.55, ease: "power2.out" }, 0.55);
+
+        // Subtitle HUD card entrance
+        tl.fromTo("#captionBox", { opacity: 0, scale: 0.9, y: 35 }, { opacity: 1, scale: 1, y: 0, duration: 0.65, ease: "power3.out" }, 0.75);
+        tl.fromTo("#pills", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.55, ease: "power2.out" }, 1.0);
+
+        // Ambient glow subtle pulse
+        tl.fromTo("#glow1", { scale: 0.85, opacity: 0.35 }, { scale: 1.2, opacity: 0.55, duration: 2.8, ease: "sine.inOut" }, 0);
+        tl.fromTo("#glow2", { scale: 1.2, opacity: 0.45 }, { scale: 0.85, opacity: 0.3, duration: 2.8, ease: "sine.inOut" }, 0);
+
+        // Card highlight glow transition
+        tl.to("#captionBox", { boxShadow: "0 25px 65px rgba(101, 212, 232, 0.4)", borderColor: "rgba(101, 212, 232, 0.6)", duration: 1.2, ease: "power1.inOut" }, 1.6);
+
+        window.__timelines["launch-scene"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

@@ -43,7 +43,7 @@ dist\SubFynn\SubFynn.exe
 > - หน้าต่างโปรแกรมแบบ Glassmorphism Dark Mode จะเปิดขึ้นมาทันที
 > - **รองรับ Drag & Drop**: สามารถลากไฟล์วิดีโอจาก Windows Explorer มาปล่อยใส่ไอคอน `SubFynn.exe` เพื่อเปิดโปรแกรมพร้อมโหลดไฟล์วิดีโอนั้นทันที
 > - รองรับการเลือกโมเดล AI (`tiny`, `base`, `small`, `medium`, `large-v3`) ถอดเสียง และแปลเป็นภาษาไทย
-> - มีปุ่ม **"🌐 เปิดโหมด Web App"** ที่มุมขวาบนเพื่อสลับไปใช้ในเบราว์เซอร์ พร้อมระบบสแกนพอร์ตอัตโนมัติป้องกันพอร์ตชน
+> - หน้าต่าง GUI ใช้งานได้โดยตรง พร้อมเลย์เอาต์ Glassmorphism ที่อ่านง่าย โดยไม่ต้องเปิดเบราว์เซอร์
 
 ### 2. โหมด Web App (สำหรับผู้ที่ต้องการ Video Player + Subtitle Editor ในเว็บ):
 ดับเบิลคลิกไฟล์:
@@ -120,6 +120,11 @@ d:\MyProject\subdev\
 ├── app.py              # เซิร์ฟเวอร์ Web Application พร้อม Video Player และ Subtitle Editor
 ├── gui.py              # หน้าต่าง Desktop Application (CustomTkinter)
 ├── cli.py              # คำสั่ง CLI สำหรับการประมวลผล
+├── vercel.json         # การตั้งค่า Deploy สู่ Vercel (Edge & Serverless Python)
+├── api/index.py        # Serverless Function Entrypoint สำหรับ Vercel
+├── public/             # Static Assets และ Web App Frontend สำหรับ Vercel Edge Hosting
+├── assets/             # ไฟล์มีเดียและคลิปวิดีโอเปิดตัว (subfynn_intro.mp4)
+├── intro_video/        # HyperFrames Source Project สำหรับเรนเดอร์วิดีโอเปิดตัว
 ├── test_engine.py      # ชุดทดสอบอัตโนมัติสำหรับโมดูล engine (Unit & Integration Tests)
 ├── test_app.py         # ชุดทดสอบอัตโนมัติสำหรับ Web API & Streaming
 ├── test_gui_and_main.py # ชุดทดสอบอัตโนมัติสำหรับ GUI และ Routing
@@ -131,9 +136,34 @@ d:\MyProject\subdev\
 
 ---
 
+## 🌐 การ Deploy สู่ Vercel (Web App Cloud Ready)
+
+SubFynn รองรับการ Deploy ขึ้น **Vercel** โดยตรง พร้อมใช้งานทั้ง Edge Static Hosting และ Serverless Python API:
+
+1. **อัปโหลดขึ้น GitHub Repository**
+2. **เชื่อมต่อโปรเจกต์บน Vercel Dashboard** (นำเข้าจาก GitHub Repo `https://github.com/qAz6ixck/SubFynn.git`)
+3. Vercel จะตรวจจับ `vercel.json` และโฟลเดอร์ `public/`, `api/` โดยอัตโนมัติ:
+   - ส่วน Frontend: เสิร์ฟผ่าน Global Edge Network ทันใจ ไม่มี Cold Start
+   - ส่วน Backend: รองรับ `api/index.py` (Vercel Python Serverless Function)
+   - ฟอนต์หลัก: ใช้งานฟอนต์ **Kanit** ครบทุกน้ำหนักและสไตล์อย่างสมบูรณ์แบบ
+4. **คลิปวิดีโอเปิดตัว (Intro Video)**:
+   - รับชมวิดีโอแนะนำตัวแอป SubFynn ความคมชัดระดับ 1080p ที่ `assets/subfynn_intro.mp4` หรือกดปุ่ม "🎬 ดูวิดีโอเปิดตัว (Intro)" บน Web Navbar ได้ทันที
+
+---
+
+## 🎨 ฟอนต์หลักของระบบ (Kanit Typography)
+
+SubFynn Web App ใช้ฟอนต์ **Kanit** จาก Google Fonts เป็นฟอนต์หลักของระบบ พร้อมคลาส Typography ครบทุกระดับความหนา:
+- `.kanit-thin` (100), `.kanit-extralight` (200), `.kanit-light` (300)
+- `.kanit-regular` (400), `.kanit-medium` (500), `.kanit-semibold` (600)
+- `.kanit-bold` (700), `.kanit-extrabold` (800), `.kanit-black` (900)
+- พร้อมคลาส Italic ทุกระดับ เช่น `.kanit-regular-italic`, `.kanit-bold-italic`
+
+---
+
 ## 🧪 การทดสอบระบบ (Verification)
 
-สามารถรันชุดทดสอบความถูกต้องทั้งหมด (48 รายการ) ได้ด้วยคำสั่ง:
+สามารถรันชุดทดสอบความถูกต้องทั้งหมด (49 รายการ) ได้ด้วยคำสั่ง:
 ```bash
 python -m unittest discover -v
 ```
@@ -149,5 +179,5 @@ python -m unittest discover -v
 - ระบบถอดเสียงและทดสอบความปลอดภัย CUDA GPU Auto-Probe (ตรวจจับการขาดหายของ DLL บน Windows แล้วสลับใช้ CPU อย่างปลอดภัยโดยไม่ค้าง)
 - ระบบแปลภาษา JAV แฟนซับ (Standard, Dirty Talk, Sweet) การแทนที่สำนวนลามก และการคงความหมายปฏิเสธ (Negation Preservation)
 - ระบบแปลด้วย Gemini AI Structured JSON, Safety Block Bypass (`BLOCK_NONE`) และ Automatic Fallback Chain
-- การทำงานของ Web Endpoints (Upload streaming, Process, Progress polling, Range requests, Shift subtitles, Dynamic Port Fallback)
+- การทำงานของ Web Endpoints (Upload streaming, Process, Progress polling, Range requests, Shift subtitles, Dynamic Port Fallback, Serving Intro Video, Kanit Typography validation)
 - การทำงานของ Desktop GUI และ Routing (การเปิด GUI ด้วยการ Drag & Drop ไฟล์วิดีโอ, การสลับโหมด CLI/Web)

@@ -36,24 +36,24 @@ ctk.set_default_color_theme("blue")
 # ==========================================
 # Liquid Glassmorphism Palette (Deep Obsidian & Glowing Accents)
 # ==========================================
-COLOR_BG = "#080C17"                  # Deep Obsidian Indigo
-COLOR_GLASS_CARD = "#10172A"          # Translucent Dark Indigo Frosted Glass
-COLOR_GLASS_BORDER = "#283556"        # Specular border
-COLOR_GLASS_BORDER_TOP = "#4F659B"    # Specular top highlight
-COLOR_INPUT_BG = "#0A0F1D"            # Deep recessed input field
-COLOR_DROPDOWN_BG = "#131C31"         # Dropdown pill background
-COLOR_DROPDOWN_HOVER = "#1E2A47"      # Dropdown hover
+COLOR_BG = "#0C0B1C"
+COLOR_GLASS_CARD = "#211D4A"
+COLOR_GLASS_BORDER = "#514C85"
+COLOR_GLASS_BORDER_TOP = "#766FC0"
+COLOR_INPUT_BG = "#14152E"
+COLOR_DROPDOWN_BG = "#28264D"
+COLOR_DROPDOWN_HOVER = "#39366E"
 COLOR_TEXT_WHITE = "#F8FAFC"          # Crisp bright white text
-COLOR_TEXT_MUTED = "#94A3B8"          # Secondary muted text
-COLOR_TEXT_DIM = "#64748B"            # Subtle secondary text
-COLOR_ACCENT_INDIGO = "#6366F1"       # Electric Indigo primary
-COLOR_ACCENT_INDIGO_HOVER = "#818CF8" # Indigo hover
-COLOR_ACCENT_PINK = "#EC4899"         # Vivid Pink (Burn action)
-COLOR_ACCENT_PINK_HOVER = "#F472B6"   # Pink hover
-COLOR_ACCENT_CYAN = "#38BDF8"         # Cyan highlight
-COLOR_ACCENT_CYAN_BG = "#112236"      # Cyan badge background
-COLOR_ACCENT_EMERALD = "#10B981"      # Emerald success
-COLOR_ACCENT_EMERALD_BG = "#06281E"   # Emerald background
+COLOR_TEXT_MUTED = "#B4B2D2"
+COLOR_TEXT_DIM = "#9290B7"
+COLOR_ACCENT_INDIGO = "#6B65F1"
+COLOR_ACCENT_INDIGO_HOVER = "#807AF8"
+COLOR_ACCENT_PINK = "#C45FC1"
+COLOR_ACCENT_PINK_HOVER = "#D975D4"
+COLOR_ACCENT_CYAN = "#52CDE7"
+COLOR_ACCENT_CYAN_BG = "#172F53"
+COLOR_ACCENT_EMERALD = "#35C9A2"
+COLOR_ACCENT_EMERALD_BG = "#173B4B"
 
 from typing import Optional
 
@@ -97,467 +97,394 @@ class ThaiSubtitleApp(ctk.CTk):
             self.load_video(initial_video)
 
     def _build_ui(self):
-        # 1. Header Glass Card
-        header_frame = ctk.CTkFrame(
+        self.geometry("1080x900")
+        self.minsize(900, 760)
+
+        page = ctk.CTkScrollableFrame(
             self,
-            corner_radius=22,
-            fg_color=COLOR_GLASS_CARD,
-            border_width=1.5,
-            border_color=COLOR_GLASS_BORDER,
+            fg_color="transparent",
+            scrollbar_button_color=COLOR_GLASS_BORDER,
+            scrollbar_button_hover_color=COLOR_GLASS_BORDER_TOP,
         )
-        header_frame.pack(fill="x", padx=16, pady=(16, 8))
+        page.pack(fill="both", expand=True, padx=6, pady=6)
 
-        top_header_bar = ctk.CTkFrame(header_frame, fg_color="transparent")
-        top_header_bar.pack(fill="x", padx=18, pady=(14, 2))
+        def make_card(parent=page):
+            return ctk.CTkFrame(
+                parent,
+                corner_radius=22,
+                fg_color=COLOR_GLASS_CARD,
+                border_width=1,
+                border_color=COLOR_GLASS_BORDER,
+            )
 
-        title_lbl = ctk.CTkLabel(
-            top_header_bar,
-            text="🎬 SubFynn - โปรแกรมสร้างซับไทยอัตโนมัติ",
-            font=ctk.CTkFont(size=20, weight="bold"),
+        # Header mirrors the Web App's brand and status row.
+        header = make_card()
+        header.pack(fill="x", padx=14, pady=(12, 10))
+        header_row = ctk.CTkFrame(header, fg_color="transparent")
+        header_row.pack(fill="x", padx=22, pady=(18, 4))
+
+        brand = ctk.CTkFrame(header_row, fg_color="transparent")
+        brand.pack(side="left", fill="x", expand=True)
+        brand_mark = ctk.CTkLabel(
+            brand,
+            text="SF",
+            width=48,
+            height=48,
+            corner_radius=15,
+            fg_color="#7055C8",
+            text_color="#FFFFFF",
+            font=ctk.CTkFont(size=17, weight="bold"),
+        )
+        brand_mark.pack(side="left", padx=(0, 14))
+
+        title_group = ctk.CTkFrame(brand, fg_color="transparent")
+        title_group.pack(side="left", fill="x", expand=True)
+        ctk.CTkLabel(
+            title_group,
+            text="SubFynn Studio",
+            font=ctk.CTkFont(size=23, weight="bold"),
             text_color=COLOR_TEXT_WHITE,
-        )
-        title_lbl.pack(side="left")
-
-        self.web_btn = ctk.CTkButton(
-            top_header_bar,
-            text="🌐 เปิดโหมด Web App",
-            font=ctk.CTkFont(size=12, weight="bold"),
-            corner_radius=14,
-            fg_color="#182238",
-            hover_color="#243354",
-            border_width=1.5,
-            border_color=COLOR_GLASS_BORDER,
-            text_color=COLOR_TEXT_WHITE,
-            height=30,
-            command=self.open_web_mode,
-        )
-        self.web_btn.pack(side="right", padx=(8, 0))
-
-        badge_lbl = ctk.CTkLabel(
-            top_header_bar,
-            text="  💎 GLASS STUDIO  ",
-            font=ctk.CTkFont(size=11, weight="bold"),
-            text_color=COLOR_ACCENT_CYAN,
-            fg_color=COLOR_ACCENT_CYAN_BG,
-            corner_radius=12,
-            padx=12,
-            pady=4,
-        )
-        badge_lbl.pack(side="right")
-
-        subtitle_lbl = ctk.CTkLabel(
-            header_frame,
-            text="โหลดวิดีโอจากข้างนอกมาใส่ แล้วสร้างซับไตเติลภาษาไทยอัตโนมัติ พร้อมส่งออกไฟล์ .SRT หรือฝังซับลงวิดีโอ",
+        ).pack(anchor="w")
+        ctk.CTkLabel(
+            title_group,
+            text="โปรแกรมสร้างซับไทยอัตโนมัติ (AI Thai Subtitle Generator)",
             font=ctk.CTkFont(size=13),
             text_color=COLOR_TEXT_MUTED,
-        )
-        subtitle_lbl.pack(padx=18, pady=(0, 14), anchor="w")
+        ).pack(anchor="w", pady=(2, 0))
 
-        # 2. File Selection Glass Card
-        file_frame = ctk.CTkFrame(
-            self,
-            corner_radius=22,
-            fg_color=COLOR_GLASS_CARD,
-            border_width=1.5,
-            border_color=COLOR_GLASS_BORDER,
-        )
-        file_frame.pack(fill="x", padx=16, pady=8)
-
-        file_label = ctk.CTkLabel(
-            file_frame,
-            text="เลือกไฟล์วิดีโอ:",
-            font=ctk.CTkFont(size=14, weight="bold"),
+        header_tools = ctk.CTkFrame(header_row, fg_color="transparent")
+        header_tools.pack(side="right", padx=(12, 0))
+        ctk.CTkLabel(
+            header_tools,
+            text="● Engine Ready",
+            corner_radius=16,
+            fg_color="#173C3A",
+            text_color="#65DDB4",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            padx=14,
+            pady=7,
+        ).pack(side="left", padx=(0, 8))
+        ctk.CTkLabel(
+            header_tools,
+            text="◆ Liquid Glass",
+            corner_radius=16,
+            fg_color="#25345A",
+            text_color="#9FC9FF",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            padx=14,
+            pady=7,
+        ).pack(side="left")
+        # File selection panel, styled after the Web App drop zone.
+        file_card = make_card()
+        file_card.pack(fill="x", padx=14, pady=10)
+        ctk.CTkLabel(
+            file_card,
+            text="เพิ่มไฟล์วิดีโอ",
+            font=ctk.CTkFont(size=17, weight="bold"),
             text_color=COLOR_TEXT_WHITE,
+        ).pack(anchor="w", padx=22, pady=(18, 12))
+
+        drop_zone = ctk.CTkFrame(
+            file_card,
+            corner_radius=19,
+            fg_color="#201F4A",
+            border_width=1,
+            border_color="#5F59A2",
         )
-        file_label.pack(anchor="w", padx=18, pady=(12, 4))
+        drop_zone.pack(fill="x", padx=22, pady=(0, 14))
+        ctk.CTkLabel(drop_zone, text="🎬", font=ctk.CTkFont(size=34)).pack(pady=(15, 2))
+        ctk.CTkLabel(
+            drop_zone,
+            text="คลิกปุ่มด้านล่างเพื่อเลือกไฟล์วิดีโอ",
+            font=ctk.CTkFont(size=16, weight="bold"),
+            text_color=COLOR_TEXT_WHITE,
+        ).pack(pady=(0, 3))
+        ctk.CTkLabel(
+            drop_zone,
+            text="รองรับ MP4, MKV, MOV, AVI, WEBM, FLV, TS (สูงสุด 2GB)",
+            font=ctk.CTkFont(size=12),
+            text_color=COLOR_TEXT_MUTED,
+        ).pack(pady=(0, 14))
 
-        file_input_box = ctk.CTkFrame(file_frame, fg_color="transparent")
-        file_input_box.pack(fill="x", padx=18, pady=(0, 14))
-
+        file_row = ctk.CTkFrame(file_card, fg_color="transparent")
+        file_row.pack(fill="x", padx=22, pady=(0, 18))
         self.file_entry = ctk.CTkEntry(
-            file_input_box,
-            placeholder_text="คลิกปุ่ม 'เลือกไฟล์' เพื่อนำเข้าวิดีโอ...",
+            file_row,
+            placeholder_text="ยังไม่ได้เลือกไฟล์วิดีโอ",
             font=ctk.CTkFont(size=13),
-            corner_radius=14,
+            corner_radius=13,
             fg_color=COLOR_INPUT_BG,
-            border_width=1.5,
+            border_width=1,
             border_color=COLOR_GLASS_BORDER,
             text_color=COLOR_TEXT_WHITE,
-            placeholder_text_color="#64748B",
-            height=38,
+            placeholder_text_color=COLOR_TEXT_DIM,
+            height=42,
         )
         self.file_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
-
         browse_btn = ctk.CTkButton(
-            file_input_box,
+            file_row,
             text="📁 เลือกไฟล์...",
-            width=120,
-            height=38,
-            corner_radius=14,
-            fg_color="#253556",
-            hover_color="#364B7A",
+            width=142,
+            height=42,
+            corner_radius=13,
+            fg_color="#3A3976",
+            hover_color="#4D4B91",
+            border_width=1,
+            border_color="#7772C2",
             text_color=COLOR_TEXT_WHITE,
-            border_width=1.5,
-            border_color=COLOR_GLASS_BORDER_TOP,
             font=ctk.CTkFont(size=13, weight="bold"),
             command=self.browse_video,
         )
         browse_btn.pack(side="right")
 
-        # 3. Options Glass Card
-        opts_frame = ctk.CTkFrame(
-            self,
-            corner_radius=22,
-            fg_color=COLOR_GLASS_CARD,
-            border_width=1.5,
-            border_color=COLOR_GLASS_BORDER,
-        )
-        opts_frame.pack(fill="x", padx=16, pady=8)
+        # Two-column options grid follows the same reading order as the Web App.
+        options_card = make_card()
+        options_card.pack(fill="x", padx=14, pady=10)
+        options_grid = ctk.CTkFrame(options_card, fg_color="transparent")
+        options_grid.pack(fill="x", padx=16, pady=(16, 8))
+        options_grid.grid_columnconfigure(0, weight=1, uniform="option-columns")
+        options_grid.grid_columnconfigure(1, weight=1, uniform="option-columns")
 
-        opts_row1 = ctk.CTkFrame(opts_frame, fg_color="transparent")
-        opts_row1.pack(fill="x", padx=16, pady=(12, 4))
-
-        # Col 1: Model
-        col1 = ctk.CTkFrame(opts_row1, fg_color="transparent")
-        col1.pack(side="left", fill="x", expand=True, padx=6)
-        ctk.CTkLabel(col1, text="โมเดล Whisper:", font=ctk.CTkFont(size=12, weight="bold"), text_color=COLOR_TEXT_WHITE).pack(anchor="w")
         self.model_var = ctk.StringVar(value="base")
-        self.model_menu = ctk.CTkOptionMenu(
-            col1,
-            values=[
-                "base (แนะนำทั่วไป)",
-                "tiny (เร็วสุด)",
-                "small (แม่นยำ)",
-                "medium (แม่นยำสูง แนะนำ JAV/ญี่ปุ่น)",
-                "large-v3 (แม่นยำสูงสุด สำหรับ JAV 18+)",
-            ],
-            variable=self.model_var,
-            corner_radius=14,
-            height=34,
-            fg_color=COLOR_DROPDOWN_BG,
-            button_color="#1C2744",
-            button_hover_color=COLOR_DROPDOWN_HOVER,
-            text_color=COLOR_TEXT_WHITE,
-            dropdown_fg_color="#0A0F1D",
-            dropdown_text_color=COLOR_TEXT_WHITE,
-            dropdown_hover_color="#1E2A47",
-        )
-        self.model_menu.pack(fill="x", pady=(4, 0))
-
-        # Col 2: Translation Style
-        col2 = ctk.CTkFrame(opts_row1, fg_color="transparent")
-        col2.pack(side="left", fill="x", expand=True, padx=6)
-        ctk.CTkLabel(col2, text="สไตล์การแปลคำบรรยาย:", font=ctk.CTkFont(size=12, weight="bold"), text_color=COLOR_TEXT_WHITE).pack(anchor="w")
         self.style_var = ctk.StringVar(value="jav (หนังผู้ใหญ่ 18+ มาตรฐานแฟนซับ)")
-        self.style_menu = ctk.CTkOptionMenu(
-            col2,
-            values=[
-                "jav (หนังผู้ใหญ่ 18+ มาตรฐานแฟนซับ)",
-                "jav_dirty (หนังผู้ใหญ่ 18+ หยาบคายได้เต็มที่ / Dirty Talk)",
-                "jav_hardcore (หนังผู้ใหญ่ 18+ Hardcore ดิบเถื่อน หยาบคายขั้นสุด)",
-                "jav_sweet (หนังผู้ใหญ่ 18+ สายหวานอ้อน)",
-                "general (ทั่วไป / ภาพยนตร์)",
-                "anime (อนิเมะ / การ์ตูน)",
-                "drama (ดราม่า / ซีรีส์)",
-            ],
-            variable=self.style_var,
-            corner_radius=14,
-            height=34,
-            fg_color=COLOR_DROPDOWN_BG,
-            button_color="#1C2744",
-            button_hover_color=COLOR_DROPDOWN_HOVER,
-            text_color=COLOR_TEXT_WHITE,
-            dropdown_fg_color="#0A0F1D",
-            dropdown_text_color=COLOR_TEXT_WHITE,
-            dropdown_hover_color="#1E2A47",
-        )
-        self.style_menu.pack(fill="x", pady=(4, 0))
-
-        opts_row2 = ctk.CTkFrame(opts_frame, fg_color="transparent")
-        opts_row2.pack(fill="x", padx=16, pady=(4, 4))
-
-        # Col 3: Language
-        col3 = ctk.CTkFrame(opts_row2, fg_color="transparent")
-        col3.pack(side="left", fill="x", expand=True, padx=6)
-        ctk.CTkLabel(col3, text="ภาษาเสียงพูดต้นฉบับ:", font=ctk.CTkFont(size=12, weight="bold"), text_color=COLOR_TEXT_WHITE).pack(anchor="w")
-        self.lang_var = ctk.StringVar(value="ja (ญี่ปุ่น - แนะนำ JAV)")
-        self.lang_menu = ctk.CTkOptionMenu(
-            col3,
-            values=[
-                "ja (ญี่ปุ่น - แนะนำ JAV)",
-                "auto (ตรวจจับอัตโนมัติ)",
-                "en (อังกฤษ)",
-                "zh (จีน)",
-                "ko (เกาหลี)",
-                "th (ไทย)",
-            ],
-            variable=self.lang_var,
-            corner_radius=14,
-            height=34,
-            fg_color=COLOR_DROPDOWN_BG,
-            button_color="#1C2744",
-            button_hover_color=COLOR_DROPDOWN_HOVER,
-            text_color=COLOR_TEXT_WHITE,
-            dropdown_fg_color="#0A0F1D",
-            dropdown_text_color=COLOR_TEXT_WHITE,
-            dropdown_hover_color="#1E2A47",
-        )
-        self.lang_menu.pack(fill="x", pady=(4, 0))
-
-        # Col 4: AI Model
-        col4 = ctk.CTkFrame(opts_row2, fg_color="transparent")
-        col4.pack(side="left", fill="x", expand=True, padx=6)
-        ctk.CTkLabel(col4, text="โมเดล AI แปลภาษา:", font=ctk.CTkFont(size=12, weight="bold"), text_color=COLOR_TEXT_WHITE).pack(anchor="w")
         self.gemini_model_var = ctk.StringVar(value="gemini-2.5-flash (แนะนำ เร็ว ฉลาด)")
-        self.gemini_model_menu = ctk.CTkOptionMenu(
-            col4,
-            values=[
-                "gemini-2.5-flash (แนะนำ เร็ว ฉลาด)",
-                "gemini-2.5-pro (แปลได้อารมณ์ลึกซึ้งขั้นสุด)",
-                "gemini-2.5-flash-lite (เร็วขั้นสุด ประหยัดโควตา)",
-                "gemini-2.0-flash (เสถียร รวดเร็ว)",
-                "gemini-2.0-flash-lite (เบา รวดเร็ว)",
-                "gemini-1.5-flash (ประหยัดโควตา)",
-                "gemini-1.5-pro (ละเอียด แม่นยำ)",
-            ],
-            variable=self.gemini_model_var,
-            corner_radius=14,
-            height=34,
-            fg_color=COLOR_DROPDOWN_BG,
-            button_color="#1C2744",
-            button_hover_color=COLOR_DROPDOWN_HOVER,
-            text_color=COLOR_TEXT_WHITE,
-            dropdown_fg_color="#0A0F1D",
-            dropdown_text_color=COLOR_TEXT_WHITE,
-            dropdown_hover_color="#1E2A47",
-        )
-        self.gemini_model_menu.pack(fill="x", pady=(4, 0))
-
-        opts_row3 = ctk.CTkFrame(opts_frame, fg_color="transparent")
-        opts_row3.pack(fill="x", padx=16, pady=(4, 8))
-
-        # Col 5: API Key
-        col5 = ctk.CTkFrame(opts_row3, fg_color="transparent")
-        col5.pack(side="left", fill="x", expand=True, padx=6)
-        ctk.CTkLabel(col5, text="Gemini API Key (ไม่บังคับ - ปลดล็อกการแปล 18+ ขั้นสุด):", font=ctk.CTkFont(size=12, weight="bold"), text_color=COLOR_TEXT_WHITE).pack(anchor="w")
-        self.gemini_entry = ctk.CTkEntry(
-            col5,
-            placeholder_text="วาง API Key ที่นี่ หรือเว้นว่างไว้เพื่อใช้ระบบโมเดลคลังศัพท์ JAV ฟรีในตัว",
-            show="*",
-            corner_radius=14,
-            fg_color=COLOR_INPUT_BG,
-            border_width=1.5,
-            border_color=COLOR_GLASS_BORDER,
-            text_color=COLOR_TEXT_WHITE,
-            placeholder_text_color="#64748B",
-            height=34,
-        )
-        self.gemini_entry.pack(fill="x", pady=(4, 0))
-
-        # Col 6: Auto Embed Mode
-        col6 = ctk.CTkFrame(opts_row3, fg_color="transparent")
-        col6.pack(side="left", fill="x", expand=True, padx=6)
-        ctk.CTkLabel(col6, text="เอาซับใส่คลิปทันที:", font=ctk.CTkFont(size=12, weight="bold"), text_color=COLOR_TEXT_WHITE).pack(anchor="w")
         self.embed_mode_var = ctk.StringVar(value="burn (ฝังซับติดภาพถาวร)")
-        self.embed_mode_menu = ctk.CTkOptionMenu(
-            col6,
-            values=[
-                "burn (ฝังซับติดภาพถาวร)",
-                "soft (ฝังซับในไฟล์เร็ว 1 วิ)",
-                "both (ทำทั้ง 2 แบบ)",
-                "none (เฉพาะไฟล์ .SRT)",
-            ],
-            variable=self.embed_mode_var,
-            corner_radius=14,
-            height=34,
-            fg_color=COLOR_DROPDOWN_BG,
-            button_color="#1C2744",
-            button_hover_color=COLOR_DROPDOWN_HOVER,
-            text_color=COLOR_TEXT_WHITE,
-            dropdown_fg_color="#0A0F1D",
-            dropdown_text_color=COLOR_TEXT_WHITE,
-            dropdown_hover_color="#1E2A47",
-        )
-        self.embed_mode_menu.pack(fill="x", pady=(4, 0))
+        self.lang_var = ctk.StringVar(value="ja (ญี่ปุ่น - แนะนำ JAV)")
 
-        # JAV Notice pill banner
-        jav_notice_frame = ctk.CTkFrame(
-            opts_frame,
-            corner_radius=14,
-            fg_color="#1E1224",
-            border_width=1.5,
-            border_color="#581C87",
-        )
-        jav_notice_frame.pack(fill="x", padx=16, pady=(4, 12))
+        def add_option(row, column, label_text, values, variable):
+            field = ctk.CTkFrame(options_grid, fg_color="transparent")
+            field.grid(row=row, column=column, sticky="ew", padx=8, pady=9)
+            ctk.CTkLabel(
+                field,
+                text=label_text,
+                font=ctk.CTkFont(size=13, weight="bold"),
+                text_color=COLOR_TEXT_WHITE,
+            ).pack(anchor="w", pady=(0, 7))
+            menu = ctk.CTkOptionMenu(
+                field,
+                values=values,
+                variable=variable,
+                corner_radius=12,
+                height=40,
+                fg_color=COLOR_DROPDOWN_BG,
+                button_color="#403E79",
+                button_hover_color="#56539A",
+                text_color=COLOR_TEXT_WHITE,
+                dropdown_fg_color=COLOR_INPUT_BG,
+                dropdown_text_color=COLOR_TEXT_WHITE,
+                dropdown_hover_color="#3A376B",
+                font=ctk.CTkFont(size=13),
+                dropdown_font=ctk.CTkFont(size=13),
+            )
+            menu.pack(fill="x")
+            return menu
 
-        jav_notice = ctk.CTkLabel(
-            jav_notice_frame,
-            text="🔞 โหมดแปล JAV / หนังผู้ใหญ่ 18+: แปลได้อารมณ์เสียว ฟิน เป็นธรรมชาติ พร้อมตัดเสียงครางวนซ้ำ",
-            font=ctk.CTkFont(size=12, weight="bold"),
-            text_color="#F472B6",
-        )
-        jav_notice.pack(padx=14, pady=6, anchor="w")
+        self.model_menu = add_option(0, 0, "ขนาดโมเดล Whisper (AI Speech-to-Text)", [
+            "base (แนะนำทั่วไป)", "tiny (เร็วสุด)", "small (แม่นยำ)",
+            "medium (แม่นยำสูง แนะนำ JAV/ญี่ปุ่น)", "large-v3 (แม่นยำสูงสุด สำหรับ JAV 18+)",
+        ], self.model_var)
+        # Keep the backend's expected model value while showing the friendly label.
+        self.model_var.set("base")
+        self.style_menu = add_option(0, 1, "สไตล์การแปลคำบรรยาย", [
+            "jav (หนังผู้ใหญ่ 18+ มาตรฐานแฟนซับ)",
+            "jav_dirty (หนังผู้ใหญ่ 18+ หยาบคายได้เต็มที่ / Dirty Talk)",
+            "jav_hardcore (หนังผู้ใหญ่ 18+ Hardcore ดิบเถื่อน หยาบคายขั้นสุด)",
+            "jav_sweet (หนังผู้ใหญ่ 18+ สายหวานอ้อน)", "general (ทั่วไป / ภาพยนตร์)",
+            "anime (อนิเมะ / การ์ตูน)", "drama (ดราม่า / ซีรีส์)",
+        ], self.style_var)
+        self.gemini_model_menu = add_option(1, 0, "โมเดล AI แปลภาษา (Translation Model)", [
+            "gemini-2.5-flash (แนะนำ เร็ว ฉลาด)",
+            "gemini-2.5-pro (แปลได้อารมณ์ลึกซึ้งขั้นสุด)",
+            "gemini-2.5-flash-lite (เร็วขั้นสุด ประหยัดโควตา)",
+            "gemini-2.0-flash (เสถียร รวดเร็ว)", "gemini-2.0-flash-lite (เบา รวดเร็ว)",
+            "gemini-1.5-flash (ประหยัดโควตา)", "gemini-1.5-pro (ละเอียด แม่นยำ)",
+        ], self.gemini_model_var)
+        self.embed_mode_menu = add_option(1, 1, "เอาซับใส่คลิปวิดีโอทันที (Auto-embed)", [
+            "burn (ฝังซับติดภาพถาวร)", "soft (ฝังซับในไฟล์เร็ว 1 วิ)",
+            "both (ทำทั้ง 2 แบบ)", "none (เฉพาะไฟล์ .SRT)",
+        ], self.embed_mode_var)
+        self.lang_menu = add_option(2, 0, "ภาษาเสียงพูดต้นฉบับ", [
+            "ja (ญี่ปุ่น - แนะนำ JAV)", "auto (ตรวจจับอัตโนมัติ)", "en (อังกฤษ)",
+            "zh (จีน)", "ko (เกาหลี)", "th (ไทย)",
+        ], self.lang_var)
 
-        # 4. Action Glass Card
-        action_frame = ctk.CTkFrame(
-            self,
-            corner_radius=22,
-            fg_color=COLOR_GLASS_CARD,
-            border_width=1.5,
-            border_color=COLOR_GLASS_BORDER,
-        )
-        action_frame.pack(fill="x", padx=16, pady=8)
-
-        self.start_btn = ctk.CTkButton(
-            action_frame,
-            text="✨ เริ่มสร้างซับไทย (Generate Thai Subtitles)",
-            font=ctk.CTkFont(size=15, weight="bold"),
-            height=46,
-            corner_radius=16,
-            fg_color=COLOR_ACCENT_INDIGO,
-            hover_color=COLOR_ACCENT_INDIGO_HOVER,
-            text_color="#FFFFFF",
-            border_width=1.5,
-            border_color="#818CF8",
-            command=self.start_processing,
-        )
-        self.start_btn.pack(fill="x", padx=18, pady=(14, 8))
-
-        self.progress_bar = ctk.CTkProgressBar(
-            action_frame,
-            corner_radius=6,
-            height=8,
-            fg_color="#0D1322",
-            progress_color=COLOR_ACCENT_CYAN,
-        )
-        self.progress_bar.pack(fill="x", padx=18, pady=(0, 6))
-        self.progress_bar.set(0)
-
-        self.status_lbl = ctk.CTkLabel(
-            action_frame,
-            text="พร้อมทำงาน กรุณาเลือกไฟล์วิดีโอแล้วกดเริ่มสร้างซับ",
-            font=ctk.CTkFont(size=13),
-            text_color=COLOR_TEXT_WHITE,
-        )
-        self.status_lbl.pack(pady=(0, 12))
-
-        # 5. Subtitle Output Glass Card
-        out_frame = ctk.CTkFrame(
-            self,
-            corner_radius=22,
-            fg_color=COLOR_GLASS_CARD,
-            border_width=1.5,
-            border_color=COLOR_GLASS_BORDER,
-        )
-        out_frame.pack(fill="both", expand=True, padx=16, pady=8)
-
-        top_bar = ctk.CTkFrame(out_frame, fg_color="transparent")
-        top_bar.pack(fill="x", padx=18, pady=(12, 6))
-
+        api_field = ctk.CTkFrame(options_grid, fg_color="transparent")
+        api_field.grid(row=2, column=1, sticky="ew", padx=8, pady=9)
         ctk.CTkLabel(
-            top_bar,
-            text="ผลลัพธ์คำบรรยายซับไทย (.SRT):",
+            api_field,
+            text="Google Gemini API Key (ไม่บังคับ)",
             font=ctk.CTkFont(size=13, weight="bold"),
             text_color=COLOR_TEXT_WHITE,
-        ).pack(side="left")
-
-        self.shift_plus_btn = ctk.CTkButton(
-            top_bar,
-            text="⏩ +0.5s",
-            width=75,
-            height=28,
+        ).pack(anchor="w", pady=(0, 7))
+        self.gemini_entry = ctk.CTkEntry(
+            api_field,
+            placeholder_text="วาง API Key หรือเว้นว่างเพื่อใช้ระบบแปลฟรี",
+            show="*",
             corner_radius=12,
-            font=ctk.CTkFont(size=11, weight="bold"),
-            fg_color="#182238",
-            hover_color="#243354",
-            border_width=1.5,
+            fg_color=COLOR_INPUT_BG,
+            border_width=1,
+            border_color=COLOR_GLASS_BORDER,
+            text_color=COLOR_TEXT_WHITE,
+            placeholder_text_color=COLOR_TEXT_DIM,
+            height=40,
+            font=ctk.CTkFont(size=13),
+        )
+        self.gemini_entry.pack(fill="x")
+
+        jav_notice = ctk.CTkFrame(
+            options_card,
+            corner_radius=14,
+            fg_color="#30204A",
+            border_width=1,
+            border_color="#7953A5",
+        )
+        jav_notice.pack(fill="x", padx=24, pady=(8, 18))
+        ctk.CTkLabel(
+            jav_notice,
+            text="🔞 โหมดแปล JAV / หนังผู้ใหญ่ 18+: แปลเป็นธรรมชาติ พร้อมตัดเสียงครางวนซ้ำ",
+            font=ctk.CTkFont(size=13, weight="bold"),
+            text_color="#E4B5FF",
+            wraplength=900,
+            justify="left",
+        ).pack(anchor="w", padx=14, pady=10)
+
+        # Primary action and progress status.
+        action_card = make_card()
+        action_card.pack(fill="x", padx=14, pady=10)
+        self.start_btn = ctk.CTkButton(
+            action_card,
+            text="✨ เริ่มสร้างซับไทย (Generate Thai Subtitles)",
+            font=ctk.CTkFont(size=16, weight="bold"),
+            height=52,
+            corner_radius=15,
+            fg_color="#6659E8",
+            hover_color="#7A6CF2",
+            text_color="#FFFFFF",
+            border_width=1,
+            border_color="#A59AFF",
+            command=self.start_processing,
+        )
+        self.start_btn.pack(fill="x", padx=22, pady=(18, 10))
+        self.progress_bar = ctk.CTkProgressBar(
+            action_card,
+            corner_radius=6,
+            height=9,
+            fg_color="#15182E",
+            progress_color=COLOR_ACCENT_CYAN,
+        )
+        self.progress_bar.pack(fill="x", padx=22, pady=(0, 8))
+        self.progress_bar.set(0)
+        self.status_lbl = ctk.CTkLabel(
+            action_card,
+            text="พร้อมทำงาน กรุณาเลือกไฟล์วิดีโอแล้วกดเริ่มสร้างซับ",
+            font=ctk.CTkFont(size=13),
+            text_color=COLOR_TEXT_MUTED,
+            wraplength=980,
+        )
+        self.status_lbl.pack(padx=18, pady=(0, 16))
+
+        # Output editor and export actions.
+        out_card = make_card()
+        out_card.pack(fill="both", expand=True, padx=14, pady=(10, 16))
+        out_header = ctk.CTkFrame(out_card, fg_color="transparent")
+        out_header.pack(fill="x", padx=20, pady=(17, 10))
+        ctk.CTkLabel(
+            out_header,
+            text="🎬 ตัวอย่างวิดีโอและคำบรรยายซับไทย (.SRT)",
+            font=ctk.CTkFont(size=16, weight="bold"),
+            text_color=COLOR_TEXT_WHITE,
+        ).pack(side="left")
+        self.shift_plus_btn = ctk.CTkButton(
+            out_header,
+            text="⏩ +0.5s",
+            width=82,
+            height=32,
+            corner_radius=11,
+            font=ctk.CTkFont(size=12, weight="bold"),
+            fg_color="#2B3154",
+            hover_color="#3D4774",
+            border_width=1,
             border_color=COLOR_GLASS_BORDER,
             text_color=COLOR_TEXT_WHITE,
             command=lambda: self.shift_time(0.5),
             state="disabled",
         )
-        self.shift_plus_btn.pack(side="right", padx=(6, 0))
-
+        self.shift_plus_btn.pack(side="right", padx=(7, 0))
         self.shift_minus_btn = ctk.CTkButton(
-            top_bar,
+            out_header,
             text="⏪ -0.5s",
-            width=75,
-            height=28,
-            corner_radius=12,
-            font=ctk.CTkFont(size=11, weight="bold"),
-            fg_color="#182238",
-            hover_color="#243354",
-            border_width=1.5,
+            width=82,
+            height=32,
+            corner_radius=11,
+            font=ctk.CTkFont(size=12, weight="bold"),
+            fg_color="#2B3154",
+            hover_color="#3D4774",
+            border_width=1,
             border_color=COLOR_GLASS_BORDER,
             text_color=COLOR_TEXT_WHITE,
             command=lambda: self.shift_time(-0.5),
             state="disabled",
         )
         self.shift_minus_btn.pack(side="right")
-
         self.srt_textbox = ctk.CTkTextbox(
-            out_frame,
-            font=ctk.CTkFont(family="Consolas", size=13),
-            corner_radius=16,
+            out_card,
+            font=ctk.CTkFont(family="Consolas", size=14),
+            corner_radius=15,
             fg_color=COLOR_INPUT_BG,
-            border_width=1.5,
+            border_width=1,
             border_color=COLOR_GLASS_BORDER,
-            text_color="#F8FAFC",
+            text_color=COLOR_TEXT_WHITE,
         )
-        self.srt_textbox.pack(fill="both", expand=True, padx=18, pady=(0, 10))
+        self.srt_textbox.pack(fill="both", expand=True, padx=20, pady=(0, 12))
 
-        # Export Buttons Row
-        export_box = ctk.CTkFrame(out_frame, fg_color="transparent")
-        export_box.pack(fill="x", padx=18, pady=(0, 14))
-
+        export_row = ctk.CTkFrame(out_card, fg_color="transparent")
+        export_row.pack(fill="x", padx=20, pady=(0, 18))
         self.save_srt_btn = ctk.CTkButton(
-            export_box,
+            export_row,
             text="💾 บันทึกไฟล์ซับ (.SRT)",
             command=self.save_srt,
             state="disabled",
-            width=170,
-            height=36,
-            corner_radius=14,
-            fg_color="#182238",
-            hover_color="#243354",
-            border_width=1.5,
+            width=185,
+            height=40,
+            corner_radius=12,
+            fg_color="#2B3154",
+            hover_color="#3D4774",
+            border_width=1,
             border_color=COLOR_GLASS_BORDER,
             text_color=COLOR_TEXT_WHITE,
             font=ctk.CTkFont(size=12, weight="bold"),
         )
         self.save_srt_btn.pack(side="left", padx=(0, 10))
-
         self.burn_btn = ctk.CTkButton(
-            export_box,
+            export_row,
             text="🎬 ฝังซับลงวิดีโอ (Burn-in MP4)",
             command=self.burn_video,
             state="disabled",
             fg_color=COLOR_ACCENT_PINK,
             hover_color=COLOR_ACCENT_PINK_HOVER,
-            border_width=1.5,
-            border_color="#F472B6",
+            border_width=1,
+            border_color="#D49BC7",
             text_color="#FFFFFF",
             font=ctk.CTkFont(size=12, weight="bold"),
-            width=210,
-            height=36,
-            corner_radius=14,
+            width=230,
+            height=40,
+            corner_radius=12,
         )
         self.burn_btn.pack(side="left", padx=(0, 10))
-
         self.open_folder_btn = ctk.CTkButton(
-            export_box,
+            export_row,
             text="📂 เปิดโฟลเดอร์ผลลัพธ์",
             command=self.open_output_folder,
             state="disabled",
             fg_color=COLOR_ACCENT_EMERALD_BG,
-            hover_color="#0E3D2E",
-            border_width=1.5,
+            hover_color="#185744",
+            border_width=1,
             border_color=COLOR_ACCENT_EMERALD,
-            text_color="#34D399",
+            text_color="#76E4B9",
             font=ctk.CTkFont(size=12, weight="bold"),
-            width=180,
-            height=36,
-            corner_radius=14,
+            width=190,
+            height=40,
+            corner_radius=12,
         )
         self.open_folder_btn.pack(side="left")
 

@@ -59,6 +59,18 @@ class TestWebAppServer(unittest.TestCase):
             self.assertIn("หนังผู้ใหญ่ / JAV 18+", content)
             self.assertIn("large-v3", content)
             self.assertIn("medium", content)
+            self.assertIn("kanit-thin", content)
+            self.assertIn("kanit-bold", content)
+            self.assertIn("kanit-regular", content)
+            self.assertIn("playIntroVideo", content)
+
+    def test_get_intro_video(self):
+        url = f"http://127.0.0.1:{self.port}/assets/subfynn_intro.mp4"
+        with urllib.request.urlopen(url) as resp:
+            self.assertEqual(resp.status, 200)
+            self.assertEqual(resp.headers.get("Content-Type"), "video/mp4")
+            data = resp.read()
+            self.assertGreater(len(data), 100000)
 
     def test_upload_and_process_flow(self):
         # 1. Upload a small synthetic video
