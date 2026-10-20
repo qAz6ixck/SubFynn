@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "screensdesign-data": {
+      "source": "screensdesign-com/screensdesign-agent-skill",
+      "sourceType": "github",
+      "skillPath": "screensdesign-data/SKILL.md",
+      "computedHash": "4ade116fc12c23a7c817b43063121a1190ef595b380d0ccce91c60d82a5b3ee1"
+    }
+  }
+}

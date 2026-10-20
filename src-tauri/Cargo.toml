@@ -1,0 +1,26 @@
+[package]
+name = "subfynn"
+version = "1.0.0"
+description = "SubFynn - AI Subtitle Studio"
+authors = ["SubFynn Team"]
+edition = "2021"
+
+[lib]
+name = "subfynn_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tauri-plugin-shell = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+windows-sys = { version = "0.59", features = [
+    "Win32_Foundation",
+    "Win32_System_JobObjects",
+    "Win32_System_Threading",
+    "Win32_Security",
+] }

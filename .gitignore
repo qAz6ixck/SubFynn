@@ -51,6 +51,10 @@ node_modules/
 test_media_workspace/
 .hyperframes/
 
+# Rust / Cargo
+target/
+src-tauri/target/
+
 # IDE / System
 .vscode/
 .idea/
