@@ -48,5 +48,4 @@ SubFynn is an AI-powered Thai subtitle generation desktop application for Window
 | **Icon Assets** | `assets/` | Multi-resolution `app_icon.ico` (256, 128, 64, 48, 32, 16) and `app_icon.png` (512x512) |
 | **Build Configuration** | `subfynn.spec` | PyInstaller spec bundling `main.py`, `gui.py`, `engine.py`, `assets/`, `ffmpeg.exe`, `ffprobe.exe` with custom icon |
 | **Build Automation** | `build_exe.py` | Automates PyInstaller build, copies binaries and assets, creates portable zip `dist/SubFynn-Windows-Portable.zip` |
-| **Launchers** | `start_app.bat` | Clean Windows batch file for launching `SubFynn.exe` or `main.py` |
 | **Unit Test Suites** | `test_engine.py`, `test_gui_and_main.py` | 44 automated unit tests verifying media pipelines, translations, GUI state, and routing |
