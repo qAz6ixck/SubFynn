@@ -9,8 +9,6 @@ block_cipher = None
 datas = [
     ('assets', 'assets'),
 ]
-if os.path.isdir('data'):
-    datas.append(('data', 'data'))
 
 binaries = []
 if os.path.isfile('ffmpeg.exe'):
