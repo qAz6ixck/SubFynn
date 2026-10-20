@@ -267,6 +267,16 @@ class TestJAVTranslationAndStyles(unittest.TestCase):
         self.assertEqual(len(results), 2)
         self.assertTrue(len(events) >= 1)
 
+    def test_translate_texts_to_thai_fast_offline_fallback_on_network_error(self):
+        from unittest.mock import patch
+        import urllib.error
+        inputs = ["気持ちいい", "いく"]
+        with patch("engine.translate_chunk_google", side_effect=urllib.error.URLError("Network unreachable")):
+            results = translate_texts_to_thai(inputs, style="jav_dirty", original_texts=inputs)
+            self.assertEqual(len(results), 2)
+            # Must translate via offline JAV cues immediately without hanging
+            self.assertTrue(any("เสียว" in r for r in results))
+
     def test_gemini_translation_with_jav_style(self):
         from unittest.mock import MagicMock, patch
         import json
@@ -471,6 +481,32 @@ class TestFFmpegAndMediaPipeline(unittest.TestCase):
         )
         self.assertTrue(os.path.isfile(out))
         self.assertGreater(os.path.getsize(out), 5000)
+
+    def test_burn_subtitles_standalone_progress_range(self):
+        srt_file = os.path.join(self.test_dir, "test_range.srt")
+        with open(srt_file, "w", encoding="utf-8") as f:
+            f.write("1\n00:00:00,000 --> 00:00:01,000\nข้อความซับไทย\n")
+
+        burned_range_mp4 = os.path.join(self.test_dir, "burned_range.mp4")
+        progress_events = []
+        def _cb(pct, msg):
+            progress_events.append((pct, msg))
+
+        out = burn_subtitles_to_video(
+            self.synthetic_video,
+            srt_file,
+            burned_range_mp4,
+            ffmpeg_path=self.ffmpeg,
+            progress_callback=_cb,
+            start_pct=10.0,
+            max_pct=98.5,
+        )
+        self.assertTrue(os.path.isfile(out))
+        if progress_events:
+            first_pct = progress_events[0][0]
+            last_pct = progress_events[-1][0]
+            self.assertGreaterEqual(first_pct, 10.0)
+            self.assertLessEqual(last_pct, 99.0)
 
     def test_burn_subtitles_with_spaces_and_brackets(self):
         # Stress-test FFmpeg filter parsing with brackets, spaces, and Thai characters in filename

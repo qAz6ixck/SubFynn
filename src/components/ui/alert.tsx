@@ -20,8 +20,8 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
         role="alert"
         className={cn(
           "relative w-full rounded-2xl border p-4 text-sm glass-card-specular backdrop-blur-glass transition-all duration-300",
-          "grid grid-cols-[auto_1fr] gap-x-3.5 gap-y-1 items-start",
-          "[&>svg]:w-5 [&>svg]:h-5 [&>svg]:mt-0.5 [&>svg]:shrink-0",
+          "[&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:w-5 [&>svg]:h-5 [&>svg]:shrink-0",
+          "[&>svg~*]:pl-8",
           variantStyles[variant] || variantStyles.default,
           className
         )}
@@ -39,7 +39,7 @@ const AlertTitle = React.forwardRef<
   <h5
     ref={ref}
     className={cn(
-      "col-start-2 font-semibold text-content-white tracking-tight leading-snug font-sans text-sm",
+      "font-semibold text-content-white tracking-tight leading-snug font-sans text-sm",
       className
     )}
     {...props}
@@ -54,7 +54,7 @@ const AlertDescription = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "col-start-2 text-xs text-content-muted leading-relaxed font-sans",
+      "text-xs text-content-muted leading-relaxed font-sans mt-1",
       className
     )}
     {...props}

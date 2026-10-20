@@ -19,6 +19,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ progress, isProcessing
   // Translate stage code to human-readable Thai label if desired
   const stageLabels: Record<string, string> = {
     idle: 'พร้อมทำงาน',
+    downloading: 'ดาวน์โหลดโมเดล',
     demuxing: 'แยกเสียง',
     extracting_audio: 'แยกเสียง',
     transcribing: 'ถอดเสียง',
@@ -27,7 +28,9 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ progress, isProcessing
     muxing: 'ฝังซับไตเติล',
     burning: 'เบิร์นซับไตเติล',
     embedding_subtitles: 'ใส่คลิป',
+    'post-processing': 'ปรับแต่งซับ',
     complete: 'เสร็จสิ้น',
+    completed: 'เสร็จสิ้น',
   };
 
   const currentStageLabel = progress.stage ? (stageLabels[progress.stage] || progress.stage) : '';

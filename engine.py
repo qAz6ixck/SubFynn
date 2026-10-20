@@ -316,11 +316,8 @@ def translate_chunk_google(
         "clients1.google.com",
         "clients2.google.com",
         "translate.googleapis.com",
-        "clients3.google.com",
-        "clients4.google.com",
-        "clients5.google.com",
     ]
-    client_params = ["at", "it"]
+    client_params = ["at"]
     user_agents = [
         "AndroidTranslate/5.3.0.RC02.130475354-53000263 5.1 phone TRANSLATE_600_RC02",
         "GoogleTranslate/6.28.0.05.421483610 (Linux; U; Android 11; Pixel 5)",
@@ -330,7 +327,7 @@ def translate_chunk_google(
     translated_full = None
     last_err = None
 
-    for attempt in range(max(1, retries)):
+    for attempt in range(max(1, min(2, retries))):
         for h_idx, host in enumerate(hosts):
             for c_idx, client_name in enumerate(client_params):
                 ua = user_agents[(attempt + h_idx + c_idx) % len(user_agents)]
@@ -344,7 +341,7 @@ def translate_chunk_google(
                 try:
                     post_data = urllib.parse.urlencode({"q": to_translate}).encode("utf-8")
                     req = urllib.request.Request(url, data=post_data, headers=headers)
-                    with urllib.request.urlopen(req, timeout=10) as resp:
+                    with urllib.request.urlopen(req, timeout=5) as resp:
                         data = json.loads(resp.read().decode("utf-8"))
                         if data and isinstance(data, list) and data[0]:
                             translated_full = "".join(part[0] for part in data[0] if part and part[0])
@@ -358,7 +355,7 @@ def translate_chunk_google(
                     try:
                         get_url = url + "&q=" + urllib.parse.quote(to_translate)
                         req = urllib.request.Request(get_url, headers=headers)
-                        with urllib.request.urlopen(req, timeout=10) as resp:
+                        with urllib.request.urlopen(req, timeout=5) as resp:
                             data = json.loads(resp.read().decode("utf-8"))
                             if data and isinstance(data, list) and data[0]:
                                 translated_full = "".join(part[0] for part in data[0] if part and part[0])
@@ -371,7 +368,7 @@ def translate_chunk_google(
                 break
         if translated_full:
             break
-        time.sleep(0.3 * (attempt + 1))
+        time.sleep(0.2 * (attempt + 1))
 
     # Secondary fallback to MyMemory if all Google client endpoints failed
     if not translated_full:
@@ -389,7 +386,7 @@ def translate_chunk_google(
                     mm_url,
                     headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"},
                 )
-                with urllib.request.urlopen(mm_req, timeout=10) as resp:
+                with urllib.request.urlopen(mm_req, timeout=5) as resp:
                     res_json = json.loads(resp.read().decode("utf-8"))
                     if res_json.get("responseStatus") == 200:
                         th_val = res_json.get("responseData", {}).get("translatedText", "")
@@ -731,14 +728,14 @@ def translate_texts_to_thai(
                     for idx, t in enumerate(translated_chunk)
                 ]
             results.extend(translated_chunk)
-        except Exception:
-            # Fallback: translate individually to guarantee perfect alignment
+        except ValueError:
+            # Line count mismatch from Google Translate: translate individually to preserve alignment
             for idx_c, item in enumerate(chunk):
                 clean_item = item.replace("\r", " ").replace("\n", " ").strip()
                 orig_item = orig_chunk[idx_c] if orig_chunk else None
                 try:
                     if clean_item and not is_thai_text(clean_item):
-                        t_item = translate_chunk_google([clean_item], target_lang="th", source_lang=source_lang)[0]
+                        t_item = translate_chunk_google([clean_item], target_lang="th", source_lang=source_lang, retries=1)[0]
                         if style_lower.startswith(("jav", "adult")):
                             t_item = post_process_jav_thai(t_item, orig_item or clean_item, style=style_lower)
                         results.append(t_item)
@@ -748,20 +745,21 @@ def translate_texts_to_thai(
                         else:
                             results.append(item)
                 except Exception:
-                    # Retry once after short sleep for network resilience
-                    try:
-                        time.sleep(0.5)
-                        t_item = translate_chunk_google([clean_item], target_lang="th", source_lang=source_lang)[0]
-                        if style_lower.startswith(("jav", "adult")):
-                            t_item = post_process_jav_thai(t_item, orig_item or clean_item, style=style_lower)
-                        results.append(t_item)
-                    except Exception:
-                        if style_lower.startswith(("jav", "adult")):
-                            cue_th = post_process_jav_thai(clean_item, orig_item or clean_item, style=style_lower)
-                            if cue_th and any('\u0e00' <= c <= '\u0e7f' for c in cue_th):
-                                results.append(cue_th)
-                                continue
+                    if style_lower.startswith(("jav", "adult")):
+                        cue_th = post_process_jav_thai(clean_item, orig_item or clean_item, style=style_lower)
+                        results.append(cue_th if (cue_th and any('\u0e00' <= c <= '\u0e7f' for c in cue_th)) else item)
+                    else:
                         results.append(item)
+        except Exception:
+            # Network or endpoint failure: fast fallback to offline post-processing without multi-minute stalls
+            for idx_c, item in enumerate(chunk):
+                clean_item = item.replace("\r", " ").replace("\n", " ").strip()
+                orig_item = orig_chunk[idx_c] if orig_chunk else None
+                if style_lower.startswith(("jav", "adult")):
+                    cue_th = post_process_jav_thai(clean_item, orig_item or clean_item, style=style_lower)
+                    results.append(cue_th if (cue_th and any('\u0e00' <= c <= '\u0e7f' for c in cue_th)) else item)
+                else:
+                    results.append(item)
 
     return results
 
@@ -1341,24 +1339,46 @@ def process_video_subtitles(
     if getattr(info, "duration", None):
         total_dur = max(1.0, float(info.duration))
 
+    cuda_ok = check_cuda_availability()
     raw_segments = []
     seg_id = 1
-    for seg in whisper_segments:
-        text = seg.text.strip()
-        if text:
-            raw_segments.append({
-                "id": seg_id,
-                "start": round(seg.start, 3),
-                "end": round(seg.end, 3),
-                "start_str": format_timestamp(seg.start, "srt"),
-                "end_str": format_timestamp(seg.end, "srt"),
-                "original_text": text,
-                "thai_text": text,
-                "text": text,
-            })
-            seg_id += 1
-            progress_pct = 32.0 + min(38.0, (seg.end / total_dur) * 38.0)
-            report(progress_pct, f"กำลังถอดเสียง: {format_timestamp(seg.end, 'srt')} / {format_timestamp(total_dur, 'srt')} ({len(raw_segments)} ท่อน)...")
+    t_transcribe_start = time.time()
+    last_seg_time = [time.time()]
+    stop_ticker = threading.Event()
+
+    def _whisper_ticker():
+        while not stop_ticker.wait(2.5):
+            now = time.time()
+            if now - last_seg_time[0] >= 2.0:
+                elapsed = now - t_transcribe_start
+                cur_count = len(raw_segments)
+                est_pct = round(min(69.0, 32.0 + (elapsed / max(10.0, total_dur * 1.5 if cuda_ok else total_dur * 3.0)) * 36.0), 1)
+                report(est_pct, f"กำลังถอดเสียงด้วย Whisper {model_size} ({int(elapsed)}s | {cur_count} ท่อน)...")
+
+    ticker_thread = threading.Thread(target=_whisper_ticker, daemon=True)
+    ticker_thread.start()
+
+    try:
+        for seg in whisper_segments:
+            last_seg_time[0] = time.time()
+            text = seg.text.strip()
+            if text:
+                raw_segments.append({
+                    "id": seg_id,
+                    "start": round(seg.start, 3),
+                    "end": round(seg.end, 3),
+                    "start_str": format_timestamp(seg.start, "srt"),
+                    "end_str": format_timestamp(seg.end, "srt"),
+                    "original_text": text,
+                    "thai_text": text,
+                    "text": text,
+                })
+                seg_id += 1
+                progress_pct = 32.0 + min(38.0, (seg.end / total_dur) * 38.0)
+                report(progress_pct, f"กำลังถอดเสียง: {format_timestamp(seg.end, 'srt')} / {format_timestamp(total_dur, 'srt')} ({len(raw_segments)} ท่อน)...")
+    finally:
+        stop_ticker.set()
+        ticker_thread.join(timeout=1.0)
 
     report(70.0, f"ถอดเสียงเสร็จสิ้น ({len(raw_segments)} ท่อน) ภาษาที่ตรวจพบ: {detected_lang}")
 
@@ -1539,6 +1559,9 @@ def process_video_subtitles(
                     output_video_path=burned_path,
                     font_size=font_size,
                     ffmpeg_path=ffmpeg,
+                    progress_callback=report,
+                    start_pct=95.0,
+                    max_pct=99.0,
                 )
                 final_video_path = burned_path
 
@@ -1640,6 +1663,8 @@ def burn_subtitles_to_video(
     font_size: int = 18,
     ffmpeg_path: Optional[str] = None,
     progress_callback: Optional[Callable[[float, str], None]] = None,
+    start_pct: float = 95.0,
+    max_pct: float = 98.8,
 ) -> str:
     """
     Burn (hardsub) SRT subtitles into an MP4 video using FFmpeg with clear styling.
@@ -1700,6 +1725,7 @@ def burn_subtitles_to_video(
                 creationflags=CREATE_NO_WINDOW,
             )
             stderr_chunks: List[bytes] = []
+            dur_info = {"total_sec": 0.0, "cur_sec": 0.0, "speed": ""}
 
             def _drain_burn_stderr():
                 try:
@@ -1708,6 +1734,19 @@ def burn_subtitles_to_video(
                         if not chunk:
                             break
                         stderr_chunks.append(chunk)
+                        chunk_text = chunk.decode("utf-8", errors="replace")
+                        if dur_info["total_sec"] == 0.0:
+                            m_dur = re.search(r"Duration:\s*(\d+):(\d+):(\d+\.?\d*)", chunk_text)
+                            if m_dur:
+                                h, m, s = m_dur.groups()
+                                dur_info["total_sec"] = int(h) * 3600 + int(m) * 60 + float(s)
+                        m_times = re.findall(r"time=(\d+):(\d+):(\d+\.?\d*)", chunk_text)
+                        if m_times:
+                            lh, lm, ls = m_times[-1]
+                            dur_info["cur_sec"] = int(lh) * 3600 + int(lm) * 60 + float(ls)
+                        m_spd = re.findall(r"speed=\s*(\d+\.?\d*x)", chunk_text)
+                        if m_spd:
+                            dur_info["speed"] = m_spd[-1]
                 except Exception:
                     pass
 
@@ -1715,11 +1754,27 @@ def burn_subtitles_to_video(
             reader_thread.start()
 
             t_start = time.time()
+            span = max(1.0, max_pct - start_pct)
             while proc.poll() is None:
                 time.sleep(0.5)
                 elapsed = time.time() - t_start
-                sub_pct = min(98.8, 95.0 + elapsed * 0.4)
-                progress_callback(round(sub_pct, 1), f"กำลังเบิร์นซับไตเติลลงในวิดีโอ (Hardsub)... ({int(elapsed)}s)")
+                tot = dur_info["total_sec"]
+                cur = dur_info["cur_sec"]
+                spd = dur_info["speed"]
+                spd_str = f" | {spd}" if spd else ""
+                if tot > 0 and cur > 0:
+                    fraction = min(1.0, cur / tot)
+                    pct = start_pct + fraction * span
+                    progress_callback(
+                        round(pct, 1),
+                        f"กำลังเบิร์นซับไตเติลลงในวิดีโอ (Hardsub): {format_timestamp(cur)} / {format_timestamp(tot)}{spd_str}..."
+                    )
+                else:
+                    sub_pct = min(max_pct, start_pct + elapsed * 0.4)
+                    progress_callback(
+                        round(sub_pct, 1),
+                        f"กำลังเบิร์นซับไตเติลลงในวิดีโอ (Hardsub)... ({int(elapsed)}s{spd_str})"
+                    )
 
             reader_thread.join(timeout=5.0)
             if proc.stderr:

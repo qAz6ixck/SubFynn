@@ -33,7 +33,7 @@ export const App: React.FC = () => {
     description: string;
     outputPath?: string;
     segmentCount?: number;
-    variant: 'success' | 'info';
+    variant: 'success' | 'info' | 'destructive';
   }>({
     isOpen: false,
     title: '',
@@ -167,8 +167,17 @@ export const App: React.FC = () => {
         segmentCount: result.segments?.length || 0,
         variant: 'success',
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error('Pipeline transcription error:', err);
+      const errMsg = typeof err === 'string' ? err : (err?.message || 'เกิดข้อผิดพลาดในการประมวลผลวิดีโอ');
+      setCompletionAlert({
+        isOpen: true,
+        title: 'การประมวลผลไม่สำเร็จ',
+        description: errMsg,
+        outputPath: undefined,
+        segmentCount: undefined,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -176,30 +185,56 @@ export const App: React.FC = () => {
     if (!selectedVideo || segments.length === 0 || isProcessing) return;
     setCompletionAlert((prev) => ({ ...prev, isOpen: false }));
     const srt = exportSRT();
-    const finalPath = await softMuxSubtitles(selectedVideo, srt);
-    setCompletionAlert({
-      isOpen: true,
-      title: 'ฝังซับไตเติล (Softsub) สำเร็จ',
-      description: 'ฝังแทร็กซับไตเติลภาษาไทยลงในคอนเทนเนอร์วิดีโอเรียบร้อย โดยไม่สูญเสียความละเอียด',
-      outputPath: finalPath,
-      segmentCount: segments.length,
-      variant: 'success',
-    });
+    try {
+      const finalPath = await softMuxSubtitles(selectedVideo, srt);
+      setCompletionAlert({
+        isOpen: true,
+        title: 'ฝังซับไตเติล (Softsub) สำเร็จ',
+        description: 'ฝังแทร็กซับไตเติลภาษาไทยลงในคอนเทนเนอร์วิดีโอเรียบร้อย โดยไม่สูญเสียความละเอียด',
+        outputPath: typeof finalPath === 'string' ? finalPath : '',
+        segmentCount: segments.length,
+        variant: 'success',
+      });
+    } catch (err: any) {
+      console.error('Softsub error:', err);
+      const errMsg = typeof err === 'string' ? err : (err?.message || 'เกิดข้อผิดพลาดในการฝังซับไตเติล');
+      setCompletionAlert({
+        isOpen: true,
+        title: 'การฝังซับไตเติลไม่สำเร็จ',
+        description: errMsg,
+        outputPath: undefined,
+        segmentCount: undefined,
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleHardBurn = async () => {
     if (!selectedVideo || segments.length === 0 || isProcessing) return;
     setCompletionAlert((prev) => ({ ...prev, isOpen: false }));
     const srt = exportSRT();
-    const finalPath = await hardBurnSubtitles(selectedVideo, srt);
-    setCompletionAlert({
-      isOpen: true,
-      title: 'เบิร์นซับไตเติล (Hardsub) สำเร็จ',
-      description: 'เรนเดอร์ตัวอักษรภาษาไทยลงบนวิดีโอเรียบร้อย สามารถเปิดดูได้ทันทีทุกอุปกรณ์',
-      outputPath: finalPath,
-      segmentCount: segments.length,
-      variant: 'success',
-    });
+    try {
+      const finalPath = await hardBurnSubtitles(selectedVideo, srt);
+      setCompletionAlert({
+        isOpen: true,
+        title: 'เบิร์นซับไตเติล (Hardsub) สำเร็จ',
+        description: 'เรนเดอร์ตัวอักษรภาษาไทยลงบนวิดีโอเรียบร้อย สามารถเปิดดูได้ทันทีทุกอุปกรณ์',
+        outputPath: typeof finalPath === 'string' ? finalPath : '',
+        segmentCount: segments.length,
+        variant: 'success',
+      });
+    } catch (err: any) {
+      console.error('Hardburn error:', err);
+      const errMsg = typeof err === 'string' ? err : (err?.message || 'เกิดข้อผิดพลาดในการเบิร์นซับไตเติล');
+      setCompletionAlert({
+        isOpen: true,
+        title: 'การเบิร์นซับไตเติลไม่สำเร็จ',
+        description: errMsg,
+        outputPath: undefined,
+        segmentCount: undefined,
+        variant: 'destructive',
+      });
+    }
   };
 
   return (

@@ -78,7 +78,16 @@ export function useTauriIpc() {
     };
   }, []);
 
+  const lastProgressRef = useRef<{ percent: number; message: string }>({ percent: -1, message: '' });
+
   const notifyProgress = useCallback((p: PipelineProgress) => {
+    if (
+      lastProgressRef.current.percent === p.percent &&
+      lastProgressRef.current.message === p.message
+    ) {
+      return;
+    }
+    lastProgressRef.current = { percent: p.percent, message: p.message };
     setProgress(p);
     progressListenersRef.current.forEach((cb) => cb(p));
   }, []);
@@ -220,16 +229,19 @@ export function useTauriIpc() {
               source_lang: config.audioLanguage,
               audio_language: config.audioLanguage,
               gemini_api_key: config.geminiApiKey,
+              embed_mode: 'none',
             },
           });
           setIsProcessing(false);
           return result;
         } catch (err) {
-          console.warn('start_pipeline Tauri invoke failed, using browser fallback flow:', err);
+          setIsProcessing(false);
+          console.error('start_pipeline failed in Tauri:', err);
+          throw err;
         }
       }
 
-      // Standalone Browser Simulation Flow
+      // Standalone Browser Simulation Flow (only when outside Tauri)
       const stages = [
         { percent: 10, stage: 'demuxing', message: 'Extracting 16kHz audio stream via FFmpeg...' },
         { percent: 35, stage: 'transcribing', message: `Whisper ${config.whisperModel} transcribing speech (CUDA)...` },
@@ -269,16 +281,19 @@ export function useTauriIpc() {
       if (isTauriEnvironment()) {
         try {
           const { invoke } = await import('@tauri-apps/api/core');
-          const finalPath = await invoke<string>('mux_subtitles', {
+          const res = await invoke<{ output_video_path?: string; video_path?: string } | string>('mux_subtitles', {
             videoPath,
             srtContent,
             outputPath: outputPath || '',
           });
+          const finalPath = typeof res === 'string' ? res : (res?.output_video_path || res?.video_path || outputPath || '');
           notifyProgress({ percent: 100, stage: 'complete', message: `Muxed video saved: ${finalPath}` });
           setIsProcessing(false);
           return finalPath;
         } catch (err) {
-          console.warn('mux_subtitles invoke fallback:', err);
+          setIsProcessing(false);
+          console.error('mux_subtitles failed in Tauri:', err);
+          throw err;
         }
       }
 
@@ -305,16 +320,19 @@ export function useTauriIpc() {
       if (isTauriEnvironment()) {
         try {
           const { invoke } = await import('@tauri-apps/api/core');
-          const finalPath = await invoke<string>('burn_subtitles', {
+          const res = await invoke<{ output_video_path?: string; video_path?: string } | string>('burn_subtitles', {
             videoPath,
             srtContent,
             outputPath: outputPath || '',
           });
+          const finalPath = typeof res === 'string' ? res : (res?.output_video_path || res?.video_path || outputPath || '');
           notifyProgress({ percent: 100, stage: 'complete', message: `Burned video saved: ${finalPath}` });
           setIsProcessing(false);
           return finalPath;
         } catch (err) {
-          console.warn('burn_subtitles invoke fallback:', err);
+          setIsProcessing(false);
+          console.error('burn_subtitles failed in Tauri:', err);
+          throw err;
         }
       }
 
@@ -332,7 +350,7 @@ export function useTauriIpc() {
 
   // Open directory in Windows Explorer
   const openOutputFolder = useCallback(async (path?: string) => {
-    const targetPath = path || 'data/output';
+    const targetPath = (typeof path === 'string' && path.trim()) ? path.trim() : 'data/output';
     if (isTauriEnvironment()) {
       try {
         const { invoke } = await import('@tauri-apps/api/core');

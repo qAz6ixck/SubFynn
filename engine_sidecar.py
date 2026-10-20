@@ -68,6 +68,8 @@ def classify_stage(percent: float, message: str) -> str:
     Classifies the current pipeline stage based on percentage and message text.
     """
     msg_lower = (message or "").lower()
+    if "ดาวน์โหลด" in msg_lower or "download" in msg_lower:
+        return "downloading"
     if "แยกเสียง" in msg_lower or "extract" in msg_lower or percent < 25.0:
         return "extracting_audio"
     if "ถอดเสียง" in msg_lower or "transcrib" in msg_lower or percent < 70.0:
@@ -260,6 +262,8 @@ def rpc_burn_subtitles(
             font_size=font_size,
             ffmpeg_path=ffmpeg_path,
             progress_callback=burn_progress if progress_cb else None,
+            start_pct=10.0,
+            max_pct=98.5,
         )
         return {
             "output_video_path": out,

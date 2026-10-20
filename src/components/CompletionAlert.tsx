@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2Icon, InfoIcon, FolderOpen, X } from 'lucide-react';
+import { CheckCircle2Icon, InfoIcon, AlertCircle, FolderOpen, X } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 export interface CompletionAlertProps {
@@ -9,7 +9,7 @@ export interface CompletionAlertProps {
   description: string;
   outputPath?: string;
   segmentCount?: number;
-  variant?: 'success' | 'info';
+  variant?: 'success' | 'info' | 'destructive' | 'default';
   onOpenOutput?: (path?: string) => void;
   onClose: () => void;
 }
@@ -24,6 +24,8 @@ export const CompletionAlert: React.FC<CompletionAlertProps> = ({
   onOpenOutput,
   onClose,
 }) => {
+  const safeOutputPath = typeof outputPath === 'string' && outputPath.trim() ? outputPath.trim() : undefined;
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -35,18 +37,20 @@ export const CompletionAlert: React.FC<CompletionAlertProps> = ({
           className="w-full"
         >
           <Alert variant={variant} className="relative shadow-2xl">
-            {variant === 'success' ? (
-              <CheckCircle2Icon className="text-brand-emerald" />
-            ) : (
+            {variant === 'destructive' ? (
+              <AlertCircle className="text-brand-rose" />
+            ) : variant === 'info' ? (
               <InfoIcon className="text-brand-cyan" />
+            ) : (
+              <CheckCircle2Icon className="text-brand-emerald" />
             )}
 
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-1">
+            <div className="flex items-start justify-between gap-4 w-full">
+              <div className="space-y-1 min-w-0 flex-1">
                 <AlertTitle className="text-sm font-semibold flex items-center gap-2">
                   <span>{title}</span>
                   {segmentCount !== undefined && segmentCount > 0 && (
-                    <span className="text-[11px] font-mono font-normal px-2 py-0.5 rounded-md bg-brand-emerald-bg/60 text-brand-emerald border border-brand-emerald/30">
+                    <span className="text-[11px] font-mono font-normal px-2 py-0.5 rounded-md bg-brand-emerald-bg/60 text-brand-emerald border border-brand-emerald/30 shrink-0">
                       {segmentCount} ท่อน
                     </span>
                   )}
@@ -54,19 +58,19 @@ export const CompletionAlert: React.FC<CompletionAlertProps> = ({
 
                 <AlertDescription className="text-xs space-y-1.5">
                   <p>{description}</p>
-                  {outputPath && (
+                  {safeOutputPath && (
                     <p className="font-mono text-[11px] text-content-dim break-all bg-surface-input/60 p-1.5 rounded-lg border border-border-card/60">
-                      {outputPath}
+                      {safeOutputPath}
                     </p>
                   )}
                 </AlertDescription>
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
-                {outputPath && onOpenOutput && (
+                {safeOutputPath && onOpenOutput && (
                   <button
                     type="button"
-                    onClick={() => onOpenOutput(outputPath)}
+                    onClick={() => onOpenOutput(safeOutputPath)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-brand-indigo/20 hover:bg-brand-indigo/30 border border-brand-indigo/40 text-brand-cyan transition-colors"
                     title="เปิดโฟลเดอร์ไฟล์ผลลัพธ์"
                   >
