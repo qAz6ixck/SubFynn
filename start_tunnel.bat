@@ -1,17 +1,15 @@
 @echo off
-chcp 65001 > nul
-title SubFynn Studio - Cloudflare Tunnel Launcher
-echo ==================================================
-echo   SubFynn Studio (Cloudflare Tunnel Mode)
-echo   กำลังเริ่มต้น Web App และเปิด Cloudflare Tunnel...
-echo ==================================================
+setlocal
+chcp 65001 >nul
+cd /d "%~dp0"
+title SubFynn Studio - Cloudflare Tunnel
 
 where python >nul 2>nul
 if %ERRORLEVEL% equ 0 (
     python "%~dp0tunnel.py" %*
-    pause
+    if errorlevel 1 pause
     exit /b
 )
 
-echo [!] ไม่พบ Python บนเครื่องของคุณ กรุณาติดตั้ง Python ก่อนใช้งาน
+echo [!] Python was not found in your system PATH.
 pause
