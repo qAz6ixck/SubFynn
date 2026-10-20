@@ -1,5 +1,7 @@
 # SubFynn - AI Thai Subtitle Studio (Windows Desktop)
 
+[![SubFynn Launch Trailer](assets/preview.jpg)](assets/subfynn_trailer.mp4)
+
 SubFynn เป็นโปรแกรม Desktop สำหรับสร้างคำบรรยายภาษาไทย (ซับไทย) อัตโนมัติคุณภาพสูงสำหรับระบบปฏิบัติการ Windows ออกแบบมาในรูปแบบโปรแกรม Standalone `.exe` สไตล์โมเดิร์นธีม `#23212C` ใช้งานง่าย ไม่ต้องติดตั้ง Python
 
 ---

@@ -34,6 +34,12 @@ brag-output/
 *.avi
 *.webm
 
+# Keep project media in assets
+!assets/*.mp4
+!assets/*.jpg
+!assets/*.png
+!assets/*.ico
+
 # Binaries & Archives (>100MB exceeds GitHub limits)
 ffmpeg.exe
 *.exe
