@@ -25,6 +25,7 @@ wheels/
 
 # Data / Uploads / Outputs
 data/
+brag-output/
 *.srt
 *.vtt
 *.mp4
