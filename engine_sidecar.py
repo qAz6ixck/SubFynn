@@ -207,7 +207,11 @@ def rpc_process_video(
     return res
 
 
-def rpc_burn_subtitles(params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def rpc_burn_subtitles(
+    params: Optional[Dict[str, Any]] = None,
+    req_id: Any = None,
+    progress_cb: Optional[Callable[[Any, float, str, str], None]] = None,
+) -> Dict[str, Any]:
     """
     engine.burn_subtitles: Hardsubs subtitles into video using bundled FFmpeg with ASCII path isolation.
     """
@@ -244,6 +248,10 @@ def rpc_burn_subtitles(params: Optional[Dict[str, Any]] = None) -> Dict[str, Any
     else:
         raise ValueError("Either 'srt_path' or 'srt_content' must be provided")
 
+    def burn_progress(pct: float, msg: str):
+        if progress_cb:
+            progress_cb(req_id, pct, "burning", msg)
+
     try:
         out = engine.burn_subtitles_to_video(
             video_path=abs_video,
@@ -251,6 +259,7 @@ def rpc_burn_subtitles(params: Optional[Dict[str, Any]] = None) -> Dict[str, Any
             output_video_path=abs_out_video,
             font_size=font_size,
             ffmpeg_path=ffmpeg_path,
+            progress_callback=burn_progress if progress_cb else None,
         )
         return {
             "output_video_path": out,
@@ -351,7 +360,7 @@ def dispatch_rpc(
         "load_model": lambda p: rpc_load_model(p),
         "process_video": lambda p: rpc_process_video(p, req_id, progress_cb),
         "shift_time": lambda p: rpc_shift_time(p),
-        "burn_subtitles": lambda p: rpc_burn_subtitles(p),
+        "burn_subtitles": lambda p: rpc_burn_subtitles(p, req_id, progress_cb),
         "mux_subtitles": lambda p: rpc_mux_subtitles(p),
         "shutdown": lambda p: rpc_shutdown(p),
     }

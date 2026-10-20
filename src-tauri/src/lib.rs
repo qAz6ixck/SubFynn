@@ -27,6 +27,33 @@ async fn ping_sidecar(
     state.call_method("engine.ping", None, Some(Duration::from_secs(10)))
 }
 
+/// Returns the detected hardware status (CUDA availability and device name)
+#[tauri::command]
+async fn get_hardware_status(
+    state: State<'_, Arc<SidecarManager>>,
+) -> Result<serde_json::Value, String> {
+    match state.call_method("engine.ping", None, Some(Duration::from_secs(5))) {
+        Ok(res) => {
+            let cuda = res.get("cuda_available").and_then(|v| v.as_bool()).unwrap_or(false);
+            let device_name = if cuda {
+                "NVIDIA CUDA GPU (Accelerated)".to_string()
+            } else {
+                "CPU Mode (int8 quantization)".to_string()
+            };
+            Ok(serde_json::json!({
+                "cuda_available": cuda,
+                "device_name": device_name,
+            }))
+        }
+        Err(_) => {
+            Ok(serde_json::json!({
+                "cuda_available": false,
+                "device_name": "CPU Mode (int8 quantization)",
+            }))
+        }
+    }
+}
+
 /// Invokes the native file picker filtered to video extensions, returning the absolute file path.
 #[tauri::command]
 async fn open_video_dialog(
@@ -240,6 +267,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             close_splashscreen,
             ping_sidecar,
+            get_hardware_status,
             open_video_dialog,
             start_pipeline,
             shift_subtitles,

@@ -15,6 +15,7 @@ import { ModelControls } from './components/ModelControls';
 import { ActionButtons } from './components/ActionButtons';
 import { ProgressBar } from './components/ProgressBar';
 import { SubtitleEditor } from './components/SubtitleEditor';
+import { CompletionAlert } from './components/CompletionAlert';
 
 export const App: React.FC = () => {
   // Splashscreen lifecycle state
@@ -25,9 +26,26 @@ export const App: React.FC = () => {
   // Selected Video Path
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
 
+  // Completion Alert state
+  const [completionAlert, setCompletionAlert] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    outputPath?: string;
+    segmentCount?: number;
+    variant: 'success' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    description: '',
+    outputPath: undefined,
+    segmentCount: undefined,
+    variant: 'success',
+  });
+
   // Model Configuration State
   const [modelConfig, setModelConfig] = useState<ModelConfig>({
-    whisperModel: 'large-v3',
+    whisperModel: 'base',
     geminiModel: 'gemini-3.5-live-translate-preview',
     translationStyle: 'jav_dirty',
     audioLanguage: 'ja',
@@ -114,6 +132,18 @@ export const App: React.FC = () => {
     setSelectedVideo(path);
   };
 
+  // Auto-detect fast model if CUDA is not available
+  useEffect(() => {
+    if (!hardware.cudaAvailable) {
+      setModelConfig((prev) => {
+        if (prev.whisperModel === 'large-v3') {
+          return { ...prev, whisperModel: 'base' };
+        }
+        return prev;
+      });
+    }
+  }, [hardware.cudaAvailable]);
+
   // Model configuration update
   const handleConfigChange = (updates: Partial<ModelConfig>) => {
     setModelConfig((prev) => ({ ...prev, ...updates }));
@@ -122,11 +152,21 @@ export const App: React.FC = () => {
   // Pipeline Execution Triggers
   const handleTranscribeAndTranslate = async () => {
     if (!selectedVideo || isProcessing) return;
+    setCompletionAlert((prev) => ({ ...prev, isOpen: false }));
     try {
       const result = await startPipeline(selectedVideo, modelConfig);
       if (result.segments && result.segments.length > 0) {
         setSegments(result.segments);
       }
+      const outPath = result.video_output_path || result.srt_path || '';
+      setCompletionAlert({
+        isOpen: true,
+        title: 'ถอดความและแปลภาษาไทยสำเร็จ',
+        description: `สร้างคำบรรยายสำเร็จทั้งหมด ${result.segments?.length || 0} ท่อน บันทึกไฟล์พร้อมใช้งาน`,
+        outputPath: outPath,
+        segmentCount: result.segments?.length || 0,
+        variant: 'success',
+      });
     } catch (err) {
       console.error('Pipeline transcription error:', err);
     }
@@ -134,14 +174,32 @@ export const App: React.FC = () => {
 
   const handleSoftMux = async () => {
     if (!selectedVideo || segments.length === 0 || isProcessing) return;
+    setCompletionAlert((prev) => ({ ...prev, isOpen: false }));
     const srt = exportSRT();
-    await softMuxSubtitles(selectedVideo, srt);
+    const finalPath = await softMuxSubtitles(selectedVideo, srt);
+    setCompletionAlert({
+      isOpen: true,
+      title: 'ฝังซับไตเติล (Softsub) สำเร็จ',
+      description: 'ฝังแทร็กซับไตเติลภาษาไทยลงในคอนเทนเนอร์วิดีโอเรียบร้อย โดยไม่สูญเสียความละเอียด',
+      outputPath: finalPath,
+      segmentCount: segments.length,
+      variant: 'success',
+    });
   };
 
   const handleHardBurn = async () => {
     if (!selectedVideo || segments.length === 0 || isProcessing) return;
+    setCompletionAlert((prev) => ({ ...prev, isOpen: false }));
     const srt = exportSRT();
-    await hardBurnSubtitles(selectedVideo, srt);
+    const finalPath = await hardBurnSubtitles(selectedVideo, srt);
+    setCompletionAlert({
+      isOpen: true,
+      title: 'เบิร์นซับไตเติล (Hardsub) สำเร็จ',
+      description: 'เรนเดอร์ตัวอักษรภาษาไทยลงบนวิดีโอเรียบร้อย สามารถเปิดดูได้ทันทีทุกอุปกรณ์',
+      outputPath: finalPath,
+      segmentCount: segments.length,
+      variant: 'success',
+    });
   };
 
   return (
@@ -233,6 +291,7 @@ export const App: React.FC = () => {
           config={modelConfig}
           onChange={handleConfigChange}
           disabled={isProcessing}
+          cudaAvailable={hardware.cudaAvailable}
         />
 
         {/* Primary Action Buttons */}
@@ -240,10 +299,22 @@ export const App: React.FC = () => {
           onTranscribe={handleTranscribeAndTranslate}
           onSoftMux={handleSoftMux}
           onHardBurn={handleHardBurn}
-          onOpenOutput={() => openOutputFolder()}
+          onOpenOutput={() => openOutputFolder(completionAlert.outputPath)}
           hasVideo={!!selectedVideo}
           hasSegments={segments.length > 0}
           isProcessing={isProcessing}
+        />
+
+        {/* Completion Alert Notification */}
+        <CompletionAlert
+          isOpen={completionAlert.isOpen}
+          title={completionAlert.title}
+          description={completionAlert.description}
+          outputPath={completionAlert.outputPath}
+          segmentCount={completionAlert.segmentCount}
+          variant={completionAlert.variant}
+          onOpenOutput={(path) => openOutputFolder(path)}
+          onClose={() => setCompletionAlert((prev) => ({ ...prev, isOpen: false }))}
         />
 
         {/* Real-Time Progress Bar */}

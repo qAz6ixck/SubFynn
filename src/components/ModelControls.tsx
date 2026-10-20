@@ -6,14 +6,17 @@ interface ModelControlsProps {
   config: ModelConfig;
   onChange: (updates: Partial<ModelConfig>) => void;
   disabled?: boolean;
+  cudaAvailable?: boolean;
 }
 
 export const ModelControls: React.FC<ModelControlsProps> = ({
   config,
   onChange,
   disabled = false,
+  cudaAvailable = false,
 }) => {
   const [showApiKey, setShowApiKey] = useState<boolean>(false);
+  const isHeavyModelOnCpu = !cudaAvailable && (config.whisperModel === 'large-v3' || config.whisperModel === 'large-v2' || config.whisperModel === 'medium');
 
   return (
     <div className="glass-card glass-card-specular p-5">
@@ -37,12 +40,17 @@ export const ModelControls: React.FC<ModelControlsProps> = ({
             disabled={disabled}
             className="w-full bg-surface-input border border-border-input rounded-xl px-3 py-2 text-xs text-content-white focus:outline-none focus:border-brand-indigo focus:ring-1 focus:ring-brand-indigo transition-all font-sans"
           >
-            <option value="large-v3">Whisper Large-v3 (Accurate)</option>
             <option value="base">Whisper Base (Fastest)</option>
-            <option value="small">Whisper Small</option>
+            <option value="small">Whisper Small (Fast)</option>
+            <option value="large-v3">Whisper Large-v3 (Accurate)</option>
             <option value="medium">Whisper Medium</option>
             <option value="large-v2">Whisper Large-v2</option>
           </select>
+          {isHeavyModelOnCpu && (
+            <p className="mt-1 text-[11px] text-amber-400/90 leading-tight">
+              โหมด CPU แนะนำ Base หรือ Small เพื่อความรวดเร็ว
+            </p>
+          )}
         </div>
 
         {/* 2. Specialized Gemini Translation Models */}

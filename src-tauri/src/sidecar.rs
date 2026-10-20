@@ -324,6 +324,9 @@ impl SidecarManager {
                         if let Err(emit_err) = app_handle_clone.emit("pipeline-progress", payload) {
                             eprintln!("[Sidecar Reader] Error emitting pipeline-progress: {}", emit_err);
                         }
+                        if let Err(emit_err) = app_handle_clone.emit("engine:progress", payload) {
+                            eprintln!("[Sidecar Reader] Error emitting engine:progress: {}", emit_err);
+                        }
                     } else if let Some(id_val) = parsed.get("id") {
                         // Route RPC response to awaiting command caller
                         if let Some(req_id) = id_val.as_u64() {

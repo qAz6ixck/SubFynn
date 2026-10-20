@@ -58,8 +58,8 @@ const SAMPLE_SEGMENTS: SubtitleSegment[] = [
 
 export function useTauriIpc() {
   const [hardware, setHardware] = useState<HardwareStatus>({
-    cudaAvailable: true,
-    deviceString: 'NVIDIA RTX 4090 (CUDA Active)',
+    cudaAvailable: false,
+    deviceString: 'Checking Hardware...',
   });
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [progress, setProgress] = useState<PipelineProgress>({
@@ -89,18 +89,23 @@ export function useTauriIpc() {
 
     if (isTauriEnvironment()) {
       import('@tauri-apps/api/event')
-        .then(({ listen }) => {
-          listen<PipelineProgress>('pipeline-progress', (event) => {
+        .then(async ({ listen }) => {
+          const unlisten1 = await listen<PipelineProgress>('pipeline-progress', (event) => {
             notifyProgress(event.payload);
-          }).then((unlistenFn) => {
-            unlisten = unlistenFn;
           });
+          const unlisten2 = await listen<PipelineProgress>('engine:progress', (event) => {
+            notifyProgress(event.payload);
+          });
+          unlisten = () => {
+            try { unlisten1(); } catch (_) {}
+            try { unlisten2(); } catch (_) {}
+          };
         })
         .catch((err) => {
-          console.warn('Could not attach Tauri pipeline-progress listener:', err);
+          console.warn('Could not attach Tauri progress listeners:', err);
         });
 
-      // Probe hardware status via Tauri invoke if available
+      // Probe hardware status via Tauri invoke
       import('@tauri-apps/api/core')
         .then(({ invoke }) => {
           invoke<{ cuda_available: boolean; device_name?: string }>('get_hardware_status')
@@ -109,14 +114,28 @@ export function useTauriIpc() {
                 cudaAvailable: res.cuda_available,
                 deviceString: res.cuda_available
                   ? (res.device_name || 'NVIDIA CUDA GPU')
-                  : 'CPU (int8 quantization)',
+                  : (res.device_name || 'CPU Mode (int8 quantization)'),
               });
             })
             .catch(() => {
-              // Command might not be ready in M3 yet; keep defaults
+              setHardware({
+                cudaAvailable: false,
+                deviceString: 'CPU Mode (int8 quantization)',
+              });
             });
         })
-        .catch(() => {});
+        .catch(() => {
+          setHardware({
+            cudaAvailable: false,
+            deviceString: 'CPU Mode (int8 quantization)',
+          });
+        });
+    } else {
+      // In browser preview
+      setHardware({
+        cudaAvailable: false,
+        deviceString: 'Browser Preview (Simulated)',
+      });
     }
 
     return () => {

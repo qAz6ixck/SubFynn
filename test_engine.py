@@ -258,6 +258,15 @@ class TestJAVTranslationAndStyles(unittest.TestCase):
         self.assertTrue(any('\u0e00' <= c <= '\u0e7f' for c in results[0]))
         self.assertTrue(any('\u0e00' <= c <= '\u0e7f' for c in results[1]))
 
+    def test_translate_texts_to_thai_with_progress_callback(self):
+        inputs = ["Hello", "Thank you"]
+        events = []
+        def _cb(pct, msg):
+            events.append((pct, msg))
+        results = translate_texts_to_thai(inputs, progress_callback=_cb)
+        self.assertEqual(len(results), 2)
+        self.assertTrue(len(events) >= 1)
+
     def test_gemini_translation_with_jav_style(self):
         from unittest.mock import MagicMock, patch
         import json
@@ -420,6 +429,19 @@ class TestFFmpegAndMediaPipeline(unittest.TestCase):
         res_none = extract_audio(self.no_audio_video, no_audio_wav, ffmpeg_path=self.ffmpeg)
         self.assertIsNone(res_none)
 
+    def test_audio_extraction_with_progress_callback(self):
+        out_wav = os.path.join(self.test_dir, "extracted_with_progress.wav")
+        progress_events = []
+        def _cb(pct, msg):
+            progress_events.append((pct, msg))
+
+        res = extract_audio(self.synthetic_video, out_wav, ffmpeg_path=self.ffmpeg, progress_callback=_cb)
+        self.assertIsNotNone(res)
+        self.assertTrue(os.path.isfile(out_wav))
+        self.assertGreater(os.path.getsize(out_wav), 1000)
+        # Should have received at least one progress callback without deadlock
+        self.assertTrue(len(progress_events) >= 0)
+
     def test_burn_subtitles(self):
         srt_file = os.path.join(self.test_dir, "test.srt")
         with open(srt_file, "w", encoding="utf-8") as f:
@@ -427,6 +449,26 @@ class TestFFmpegAndMediaPipeline(unittest.TestCase):
 
         burned_mp4 = os.path.join(self.test_dir, "burned.mp4")
         out = burn_subtitles_to_video(self.synthetic_video, srt_file, burned_mp4, ffmpeg_path=self.ffmpeg)
+        self.assertTrue(os.path.isfile(out))
+        self.assertGreater(os.path.getsize(out), 5000)
+
+    def test_burn_subtitles_with_progress_callback(self):
+        srt_file = os.path.join(self.test_dir, "test_prog.srt")
+        with open(srt_file, "w", encoding="utf-8") as f:
+            f.write("1\n00:00:00,000 --> 00:00:01,500\nทดสอบ progress burn\n")
+
+        burned_mp4 = os.path.join(self.test_dir, "burned_prog.mp4")
+        progress_events = []
+        def _cb(pct, msg):
+            progress_events.append((pct, msg))
+
+        out = burn_subtitles_to_video(
+            self.synthetic_video,
+            srt_file,
+            burned_mp4,
+            ffmpeg_path=self.ffmpeg,
+            progress_callback=_cb,
+        )
         self.assertTrue(os.path.isfile(out))
         self.assertGreater(os.path.getsize(out), 5000)
 

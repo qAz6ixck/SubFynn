@@ -54,6 +54,10 @@ export interface PipelineResult {
   srt_content?: string;
   vtt_content?: string;
   output_video_path?: string;
+  video_output_path?: string;
+  burned_video_path?: string;
+  softsub_video_path?: string;
+  message?: string;
 }
 
 export interface HardwareStatus {

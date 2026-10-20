@@ -202,17 +202,39 @@ def extract_audio(
     if progress_callback:
         proc = subprocess.Popen(
             cmd,
-            stdout=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE,
             creationflags=CREATE_NO_WINDOW,
         )
+        stderr_chunks: List[bytes] = []
+
+        def _drain_stderr():
+            try:
+                while True:
+                    chunk = proc.stderr.read(4096)
+                    if not chunk:
+                        break
+                    stderr_chunks.append(chunk)
+            except Exception:
+                pass
+
+        reader_thread = threading.Thread(target=_drain_stderr, daemon=True)
+        reader_thread.start()
+
         t_start = time.time()
         while proc.poll() is None:
             time.sleep(0.5)
             elapsed = time.time() - t_start
             sub_pct = min(27.0, 10.0 + elapsed * 1.5)
             progress_callback(round(sub_pct, 1), f"กำลังแยกเสียงจากวิดีโอ... ({int(elapsed)}s)")
-        stdout_bytes, stderr_bytes = proc.communicate()
+
+        reader_thread.join(timeout=5.0)
+        if proc.stderr:
+            try:
+                proc.stderr.close()
+            except Exception:
+                pass
+        stderr_bytes = b"".join(stderr_chunks)
         stderr_text = stderr_bytes.decode("utf-8", errors="replace") if stderr_bytes else ""
         if proc.returncode != 0:
             err_msg = stderr_text[-500:]
@@ -686,6 +708,7 @@ def translate_texts_to_thai(
     style: str = "jav",
     original_texts: Optional[List[str]] = None,
     source_lang: Optional[str] = None,
+    progress_callback: Optional[Callable[[float, str], None]] = None,
 ) -> List[str]:
     """
     Batch translate list of strings to Thai with chunking and error resilience.
@@ -695,6 +718,9 @@ def translate_texts_to_thai(
     style_lower = (style or "jav").lower()
 
     for i in range(0, len(texts), batch_size):
+        if progress_callback and len(texts) > 0:
+            pct = 75.0 + (i / len(texts)) * 16.0
+            progress_callback(round(pct, 1), f"กำลังแปลภาษาไทย ({i}/{len(texts)} ประโยค)...")
         chunk = texts[i:i + batch_size]
         orig_chunk = original_texts[i:i + batch_size] if original_texts else None
         try:
@@ -765,7 +791,10 @@ def translate_segments_with_gemini(
     except ImportError:
         raise ImportError("ไม่พบแพ็กเกจ google-genai กรุณาติดตั้งด้วย pip install google-genai")
 
-    client = genai.Client(api_key=api_key)
+    try:
+        client = genai.Client(api_key=api_key, http_options=types.HttpOptions(timeout=15000))
+    except Exception:
+        client = genai.Client(api_key=api_key)
     style_lower = (style or "jav").lower()
 
     if style_lower in ("jav_dirty", "adult_dirty", "jav_hardcore", "jav_vulgar", "dirty", "hardcore", "vulgar"):
@@ -918,7 +947,10 @@ def translate_segments_with_gemini(
                 )
                 if response and (response.text or "").strip():
                     break
-            except Exception:
+            except Exception as e_gen:
+                err_text = str(e_gen).lower()
+                if any(x in err_text for x in ["api_key", "api key", "unauthenticated", "401", "403", "permissiondenied", "invalid argument"]):
+                    raise e_gen
                 try:
                     response = client.models.generate_content(
                         model=try_model,
@@ -926,7 +958,10 @@ def translate_segments_with_gemini(
                     )
                     if response and (response.text or "").strip():
                         break
-                except Exception:
+                except Exception as e_inner:
+                    inner_text = str(e_inner).lower()
+                    if any(x in inner_text for x in ["api_key", "api key", "unauthenticated", "401", "403", "permissiondenied", "invalid argument"]):
+                        raise e_inner
                     continue
 
         raw_text = (response.text if response else "") or ""
@@ -1092,12 +1127,16 @@ _WHISPER_CACHE: Dict[str, Any] = {}
 _WHISPER_LOCK = threading.Lock()
 
 
-def load_whisper_model_safely(model_size: str = "base"):
+def load_whisper_model_safely(
+    model_size: str = "base",
+    progress_callback: Optional[Callable[[float, str], None]] = None,
+):
     """
     Safely load WhisperModel with CUDA GPU acceleration if available,
     with an active probe to guard against missing CUDA runtime DLLs (e.g. cublas64_12.dll on Windows).
     Caches loaded model instances in memory to eliminate repeated disk load overhead.
     Falls back gracefully to CPU int8 if CUDA is unavailable or broken.
+    Provides real-time feedback during model download and loading.
     """
     cuda_ok = check_cuda_availability()
     cache_key = f"{model_size}_{'cuda' if cuda_ok else 'cpu'}"
@@ -1105,17 +1144,90 @@ def load_whisper_model_safely(model_size: str = "base"):
         if cache_key in _WHISPER_CACHE:
             return _WHISPER_CACHE[cache_key]
 
+    import faster_whisper
+    import huggingface_hub
+
+    # Check if local model files already exist in cache
+    is_cached = False
+    try:
+        faster_whisper.download_model(model_size, local_files_only=True)
+        is_cached = True
+    except Exception:
+        is_cached = False
+
+    if not is_cached:
+        if progress_callback:
+            progress_callback(28.5, f"กำลังดาวน์โหลดโมเดล Whisper {model_size} จาก HuggingFace (อาจใช้เวลาหลายนาที)...")
+
+        repo_id = faster_whisper.utils._MODELS.get(model_size, model_size)
+
+        class _ProgressTqdm:
+            def __init__(self, *args, **kwargs):
+                self.total = kwargs.get("total") or 0
+                self.n = 0
+                self.desc = kwargs.get("desc") or ""
+                self._last_time = time.time()
+
+            def update(self, n=1):
+                self.n += n
+                now = time.time()
+                if now - self._last_time >= 0.8:
+                    self._last_time = now
+                    if progress_callback:
+                        if self.total > 0:
+                            pct = 28.5 + min(1.4, (self.n / self.total) * 1.4)
+                            mb_done = self.n / (1024 * 1024)
+                            mb_total = self.total / (1024 * 1024)
+                            progress_callback(round(pct, 1), f"กำลังดาวน์โหลดโมเดล Whisper {model_size}: {mb_done:.1f}/{mb_total:.1f} MB...")
+                        else:
+                            mb_done = self.n / (1024 * 1024)
+                            progress_callback(29.0, f"กำลังดาวน์โหลดโมเดล Whisper {model_size}: {mb_done:.1f} MB...")
+
+            def close(self):
+                pass
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                pass
+
+        try:
+            huggingface_hub.snapshot_download(
+                repo_id,
+                allow_patterns=[
+                    "config.json",
+                    "preprocessor_config.json",
+                    "model.bin",
+                    "tokenizer.json",
+                    "vocabulary.*",
+                ],
+                tqdm_class=_ProgressTqdm,
+            )
+            if progress_callback:
+                progress_callback(29.8, f"ดาวน์โหลดโมเดล Whisper {model_size} สำเร็จ กำลังเริ่มการทำงาน...")
+        except Exception:
+            # Fall back to internal download
+            pass
+
     from faster_whisper import WhisperModel
 
     model = None
     cpu_threads = min(16, max(4, os.cpu_count() or 4))
     if cuda_ok:
         try:
+            if progress_callback:
+                progress_callback(30.0, f"กำลังโหลดโมเดล Whisper ({model_size}) ในโหมด CUDA GPU...")
             model = WhisperModel(model_size, device="cuda", compute_type="float16")
         except Exception:
             pass
 
     if model is None:
+        if progress_callback:
+            if model_size in ("large-v3", "large-v2", "large", "medium"):
+                progress_callback(30.0, f"กำลังโหลดโมเดล Whisper ({model_size}) ในโหมด CPU (โหมด CPU อาจใช้เวลานานสำหรับโมเดลใหญ่)...")
+            else:
+                progress_callback(30.0, f"กำลังโหลดโมเดล Whisper ({model_size}) ในโหมด CPU...")
         model = WhisperModel(model_size, device="cpu", compute_type="int8", cpu_threads=cpu_threads)
 
     with _WHISPER_LOCK:
@@ -1184,9 +1296,7 @@ def process_video_subtitles(
 
     report(28.0, "แยกเสียงสำเร็จ กำลังโหลดโมเดล Whisper...")
     # Step 2: Transcribe with Whisper (Auto-detect CUDA for fast inference with safe probe)
-    report(30.0, f"กำลังโหลดโมเดล Whisper ({model_size})...")
-    model = load_whisper_model_safely(model_size)
-    report(33.0, "กำลังสแกนและถอดเสียงพูด...")
+    model = load_whisper_model_safely(model_size, progress_callback=report)
 
     lang_param = None
     if source_lang and source_lang.lower() not in ("auto", "none", ""):
@@ -1200,6 +1310,9 @@ def process_video_subtitles(
     with wave.open(wav_path, "rb") as wf:
         raw_bytes = wf.readframes(wf.getnframes())
         audio_data = np.frombuffer(raw_bytes, dtype=np.int16).astype(np.float32) / 32768.0
+
+    total_dur = max(1.0, float(len(audio_data) / 16000.0))
+    report(32.0, f"กำลังเริ่มถอดเสียงด้วย Whisper {model_size} ({format_timestamp(total_dur, 'srt')})...")
 
     transcribe_kwargs = {
         "language": lang_param,
@@ -1225,7 +1338,9 @@ def process_video_subtitles(
     )
 
     detected_lang = info.language
-    total_dur = max(1.0, float(getattr(info, "duration", 0.0) or (len(audio_data) / 16000.0)))
+    if getattr(info, "duration", None):
+        total_dur = max(1.0, float(info.duration))
+
     raw_segments = []
     seg_id = 1
     for seg in whisper_segments:
@@ -1242,7 +1357,7 @@ def process_video_subtitles(
                 "text": text,
             })
             seg_id += 1
-            progress_pct = 30.0 + min(38.0, (seg.end / total_dur) * 38.0)
+            progress_pct = 32.0 + min(38.0, (seg.end / total_dur) * 38.0)
             report(progress_pct, f"กำลังถอดเสียง: {format_timestamp(seg.end, 'srt')} / {format_timestamp(total_dur, 'srt')} ({len(raw_segments)} ท่อน)...")
 
     report(70.0, f"ถอดเสียงเสร็จสิ้น ({len(raw_segments)} ท่อน) ภาษาที่ตรวจพบ: {detected_lang}")
@@ -1268,6 +1383,7 @@ def process_video_subtitles(
                         output_video_path=burned_path,
                         font_size=font_size,
                         ffmpeg_path=ffmpeg,
+                        progress_callback=report,
                     )
                     final_video_path = burned_path
                 if clean_embed_mode in ("soft", "both", "fast", "mux"):
@@ -1301,7 +1417,7 @@ def process_video_subtitles(
         }
 
     # Step 3: Translate to Thai if not Thai
-    report(75.0, f"กำลังแปลคำบรรยายเป็นภาษาไทย (สไตล์: {style_clean})...")
+    report(72.0, f"กำลังแปลคำบรรยายเป็นภาษาไทย (สไตล์: {style_clean})...")
 
     # Determine if segments need translation:
     # 1) Detected language is not Thai, OR
@@ -1318,7 +1434,7 @@ def process_video_subtitles(
 
     if needs_translation:
         if gemini_api_key and gemini_api_key.strip():
-            report(80.0, f"กำลังแปลภาษาไทยด้วย Gemini AI ({gemini_model} | สไตล์: {style_clean})...")
+            report(74.0, f"กำลังแปลภาษาไทยด้วย Gemini AI ({gemini_model} | สไตล์: {style_clean})...")
             try:
                 raw_segments = translate_segments_with_gemini(
                     raw_segments,
@@ -1328,15 +1444,27 @@ def process_video_subtitles(
                 )
             except Exception as e:
                 # fallback to google translate
-                report(82.0, f"Gemini เกิดข้อผิดพลาด ({str(e)}) เปลี่ยนเป็นตัวแปล JAV สำรอง...")
+                report(75.0, f"Gemini เกิดข้อผิดพลาด ({str(e)}) สลับไปใช้ระบบแปลภาษาไทยความเร็วสูง...")
                 orig_texts = [s["original_text"] for s in raw_segments]
-                thai_texts = translate_texts_to_thai(orig_texts, style=style_clean, original_texts=orig_texts, source_lang=source_lang)
+                thai_texts = translate_texts_to_thai(
+                    orig_texts,
+                    style=style_clean,
+                    original_texts=orig_texts,
+                    source_lang=source_lang,
+                    progress_callback=report,
+                )
                 for seg, th_text in zip(raw_segments, thai_texts):
                     seg["thai_text"] = th_text
                     seg["text"] = th_text
         else:
             orig_texts = [s["original_text"] for s in raw_segments]
-            thai_texts = translate_texts_to_thai(orig_texts, style=style_clean, original_texts=orig_texts, source_lang=source_lang)
+            thai_texts = translate_texts_to_thai(
+                orig_texts,
+                style=style_clean,
+                original_texts=orig_texts,
+                source_lang=source_lang,
+                progress_callback=report,
+            )
             for seg, th_text in zip(raw_segments, thai_texts):
                 seg["thai_text"] = th_text
                 seg["text"] = th_text
@@ -1511,6 +1639,7 @@ def burn_subtitles_to_video(
     output_video_path: str,
     font_size: int = 18,
     ffmpeg_path: Optional[str] = None,
+    progress_callback: Optional[Callable[[float, str], None]] = None,
 ) -> str:
     """
     Burn (hardsub) SRT subtitles into an MP4 video using FFmpeg with clear styling.
@@ -1562,20 +1691,60 @@ def burn_subtitles_to_video(
             abs_out,
         ]
 
-        # Execute with cwd=out_dir so relative subtitle name is resolved without drive colon conflicts.
-        # Enforce UTF-8 encoding so Windows Thai cp874 never triggers UnicodeDecodeError in reader thread.
-        result = subprocess.run(
-            cmd,
-            cwd=out_dir,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            encoding="utf-8",
-            errors="replace",
-            creationflags=CREATE_NO_WINDOW,
-        )
-        if result.returncode != 0:
-            err_msg = (result.stderr or "")[-500:]
-            raise RuntimeError(f"FFmpeg burn subtitle error: {err_msg}")
+        if progress_callback:
+            proc = subprocess.Popen(
+                cmd,
+                cwd=out_dir,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
+                creationflags=CREATE_NO_WINDOW,
+            )
+            stderr_chunks: List[bytes] = []
+
+            def _drain_burn_stderr():
+                try:
+                    while True:
+                        chunk = proc.stderr.read(4096)
+                        if not chunk:
+                            break
+                        stderr_chunks.append(chunk)
+                except Exception:
+                    pass
+
+            reader_thread = threading.Thread(target=_drain_burn_stderr, daemon=True)
+            reader_thread.start()
+
+            t_start = time.time()
+            while proc.poll() is None:
+                time.sleep(0.5)
+                elapsed = time.time() - t_start
+                sub_pct = min(98.8, 95.0 + elapsed * 0.4)
+                progress_callback(round(sub_pct, 1), f"กำลังเบิร์นซับไตเติลลงในวิดีโอ (Hardsub)... ({int(elapsed)}s)")
+
+            reader_thread.join(timeout=5.0)
+            if proc.stderr:
+                try:
+                    proc.stderr.close()
+                except Exception:
+                    pass
+            stderr_bytes = b"".join(stderr_chunks)
+            stderr_text = stderr_bytes.decode("utf-8", errors="replace") if stderr_bytes else ""
+            if proc.returncode != 0:
+                err_msg = stderr_text[-500:]
+                raise RuntimeError(f"FFmpeg burn subtitle error: {err_msg}")
+        else:
+            result = subprocess.run(
+                cmd,
+                cwd=out_dir,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                encoding="utf-8",
+                errors="replace",
+                creationflags=CREATE_NO_WINDOW,
+            )
+            if result.returncode != 0:
+                err_msg = (result.stderr or "")[-500:]
+                raise RuntimeError(f"FFmpeg burn subtitle error: {err_msg}")
 
         if not os.path.isfile(abs_out) or os.path.getsize(abs_out) == 0:
             raise RuntimeError("การฝังซับล้มเหลว ไฟล์วิดีโอผลลัพธ์มีขนาด 0 ไบต์")
