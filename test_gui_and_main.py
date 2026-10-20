@@ -1,5 +1,5 @@
 """
-Unit tests for gui.py and main.py routing logic.
+Unit tests for gui.py and main.py standalone desktop routing.
 """
 
 import os
@@ -16,6 +16,8 @@ class TestGuiAndMain(unittest.TestCase):
         app = ThaiSubtitleApp()
         self.assertEqual(app.video_path, "")
         self.assertEqual(app.file_entry.get(), "")
+        # Model locked to large-v3 default
+        self.assertTrue(app.model_var.get().startswith("large-v3"))
         self.assertTrue(app.style_var.get().startswith("jav"))
         self.assertTrue(app.lang_var.get().startswith("ja"))
         self.assertTrue(app.gemini_model_var.get().startswith("gemini"))
@@ -40,6 +42,30 @@ class TestGuiAndMain(unittest.TestCase):
         app.update()
         app.destroy()
 
+    def test_gui_specialized_translation_models(self):
+        app = ThaiSubtitleApp()
+        # Verify the 3 specialized translation models are in the options menu
+        values = app.gemini_model_menu.cget("values")
+        self.assertEqual(len(values), 3)
+        self.assertTrue(any("gemini-3.5-live-translate-preview" in v for v in values))
+        self.assertTrue(any("cloud-translation-llm" in v for v in values))
+        self.assertTrue(any("gemini-2.5-flash" in v for v in values))
+        app.destroy()
+
+    def test_gui_shift_time(self):
+        app = ThaiSubtitleApp()
+        app.last_result = {
+            "segments": [
+                {"id": 1, "start": 1.0, "end": 3.0, "text": "สวัสดี"}
+            ],
+            "srt_content": "1\n00:00:01,000 --> 00:00:03,000\nสวัสดี\n",
+        }
+        app.shift_time(0.5)
+        self.assertAlmostEqual(app.last_result["segments"][0]["start"], 1.5)
+        self.assertAlmostEqual(app.last_result["segments"][0]["end"], 3.5)
+        self.assertIn("00:00:01,500 --> 00:00:03,500", app.srt_textbox.get("1.0", "end"))
+        app.destroy()
+
     def test_main_routing_gui_default(self):
         import main
         with patch.object(sys, "argv", ["main.py"]):
@@ -60,54 +86,6 @@ class TestGuiAndMain(unittest.TestCase):
                     main.main()
                     mock_app_class.assert_called_once_with(initial_video="my_movie.mp4")
                     mock_instance.mainloop.assert_called_once()
-
-    def test_main_routing_web_mode(self):
-        import main
-        with patch.object(sys, "argv", ["SubFynn.exe", "--web", "--port", "5010"]):
-            with patch("app.start_server") as mock_start_server:
-                main.main()
-                mock_start_server.assert_called_once_with(port=5010, open_browser=True)
-
-    def test_gui_open_web_mode(self):
-        app = ThaiSubtitleApp()
-        with patch("app.start_server_in_background", return_value=5000) as mock_bg:
-            with patch("webbrowser.open") as mock_open:
-                app.open_web_mode()
-                mock_bg.assert_called_once_with(port=5000)
-                mock_open.assert_called_once_with("http://127.0.0.1:5000")
-                self.assertIn("5000", app.status_lbl.cget("text"))
-        app.destroy()
-
-    def test_cli_style_and_model_args(self):
-        import cli
-        with patch("argparse.ArgumentParser.parse_args") as mock_parse:
-            import argparse
-            mock_parse.return_value = argparse.Namespace(
-                video=os.path.abspath("README.md"),
-                model="large-v3",
-                style="jav_dirty",
-                gemini_model="gemini-2.5-pro",
-                lang="ja",
-                gemini_key=None,
-                outdir=None,
-                shift_seconds=0.0,
-                burn=False,
-            )
-            with patch("cli.process_video_subtitles") as mock_process:
-                mock_process.return_value = {
-                    "success": True,
-                    "detected_language": "ja",
-                    "segments": [],
-                    "srt_path": "out.srt",
-                    "vtt_path": "out.vtt",
-                }
-                with patch("sys.stdout"):
-                    cli.main()
-                mock_process.assert_called_once()
-                self.assertEqual(mock_process.call_args[1]["model_size"], "large-v3")
-                self.assertEqual(mock_process.call_args[1]["translation_style"], "jav_dirty")
-                self.assertEqual(mock_process.call_args[1]["gemini_model"], "gemini-2.5-pro")
-                self.assertEqual(mock_process.call_args[1]["source_lang"], "ja")
 
 
 if __name__ == "__main__":

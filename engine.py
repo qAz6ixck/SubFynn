@@ -848,18 +848,25 @@ def translate_segments_with_gemini(
             )
         )
 
-    # Model fallback sequence with latest Gemini 2.5 and 2.0 options
-    models_to_try = [model]
-    for fallback_m in [
+    # Model alias mapping for specialized translation models
+    primary_candidates = []
+    if model in ("gemini-3.5-live-translate-preview", "live-translate"):
+        primary_candidates = ["gemini-3.5-live-translate-preview", "gemini-2.5-flash"]
+    elif model in ("cloud-translation-llm", "cloud-translation", "translation-llm"):
+        primary_candidates = ["gemini-2.5-pro", "gemini-2.5-flash"]
+    else:
+        primary_candidates = [model]
+
+    models_to_try = []
+    for cand in primary_candidates + [
         "gemini-2.5-flash",
-        "gemini-2.5-flash-lite",
         "gemini-2.5-pro",
         "gemini-2.0-flash",
         "gemini-2.0-flash-lite",
         "gemini-1.5-flash",
     ]:
-        if fallback_m not in models_to_try:
-            models_to_try.append(fallback_m)
+        if cand and cand not in models_to_try:
+            models_to_try.append(cand)
 
     def _translate_chunk(chunk_segments):
         input_list = [{"id": s["id"], "text": s["original_text"]} for s in chunk_segments]

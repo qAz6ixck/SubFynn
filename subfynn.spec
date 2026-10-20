@@ -6,14 +6,22 @@ from PyInstaller.utils.hooks import collect_all
 
 block_cipher = None
 
-datas = []
+datas = [
+    ('assets', 'assets'),
+]
+if os.path.isdir('data'):
+    datas.append(('data', 'data'))
+
 binaries = []
+if os.path.isfile('ffmpeg.exe'):
+    binaries.append(('ffmpeg.exe', '.'))
+if os.path.isfile('ffprobe.exe'):
+    binaries.append(('ffprobe.exe', '.'))
+
 hiddenimports = [
     'pywinstyles',
     'gui',
     'main',
-    'app',
-    'cli',
     'engine',
     'customtkinter',
     'ctranslate2',
@@ -30,8 +38,12 @@ hiddenimports = [
     'tkinter',
     'tkinter.filedialog',
     'tkinter.messagebox',
+    'tkinter.ttk',
     'wave',
     'numpy',
+    'PIL',
+    'PIL.Image',
+    'PIL.ImageTk',
 ]
 
 packages_to_collect = [
@@ -44,6 +56,7 @@ packages_to_collect = [
     'tokenizers',
     'huggingface_hub',
     'google.genai',
+    'PIL',
 ]
 
 for pkg in packages_to_collect:
@@ -51,10 +64,6 @@ for pkg in packages_to_collect:
     datas.extend(d)
     binaries.extend(b)
     hiddenimports.extend(h)
-
-# Include bundled ffmpeg.exe
-if os.path.isfile('ffmpeg.exe'):
-    binaries.append(('ffmpeg.exe', '.'))
 
 a = Analysis(
     ['main.py'],
@@ -74,7 +83,9 @@ a = Analysis(
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
-# SubFynn Desktop GUI Exe (Windowed)
+# SubFynn Desktop GUI Exe (Windowed) with custom icon
+icon_path = os.path.abspath('assets/app_icon.ico') if os.path.isfile('assets/app_icon.ico') else None
+
 exe_gui = EXE(
     pyz,
     a.scripts,
@@ -91,6 +102,7 @@ exe_gui = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=icon_path,
 )
 
 coll = COLLECT(

@@ -1,13 +1,15 @@
 """
-Desktop GUI for Thai Subtitle Generator using CustomTkinter.
-Run via: python gui.py
+Desktop GUI for SubFynn - AI Thai Subtitle Generator using CustomTkinter.
+Redesigned with #23212C theme, zero emojis, Whisper Large-v3 default,
+and specialized Gemini translation models.
 """
 
 import os
 import sys
 import subprocess
 import threading
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, ttk
+from typing import Optional, List, Dict, Any
 import customtkinter as ctk
 
 # Ensure stdout and stderr exist (in windowed/frozen mode they may be None)
@@ -34,44 +36,59 @@ ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
 # ==========================================
-# Liquid Glassmorphism Palette (Deep Obsidian & Glowing Accents)
+# Studio Dark Palette (#23212C Theme & Zero Emojis)
 # ==========================================
-COLOR_BG = "#0C0B1C"
-COLOR_GLASS_CARD = "#211D4A"
-COLOR_GLASS_BORDER = "#514C85"
-COLOR_GLASS_BORDER_TOP = "#766FC0"
-COLOR_INPUT_BG = "#14152E"
-COLOR_DROPDOWN_BG = "#28264D"
-COLOR_DROPDOWN_HOVER = "#39366E"
-COLOR_TEXT_WHITE = "#F8FAFC"          # Crisp bright white text
-COLOR_TEXT_MUTED = "#B4B2D2"
-COLOR_TEXT_DIM = "#9290B7"
-COLOR_ACCENT_INDIGO = "#6B65F1"
-COLOR_ACCENT_INDIGO_HOVER = "#807AF8"
-COLOR_ACCENT_PINK = "#C45FC1"
-COLOR_ACCENT_PINK_HOVER = "#D975D4"
-COLOR_ACCENT_CYAN = "#52CDE7"
-COLOR_ACCENT_CYAN_BG = "#172F53"
-COLOR_ACCENT_EMERALD = "#35C9A2"
-COLOR_ACCENT_EMERALD_BG = "#173B4B"
-
-from typing import Optional
+COLOR_BG = "#23212C"
+COLOR_CARD = "#1C1924"
+COLOR_CARD_HOVER = "#262232"
+COLOR_CARD_BORDER = "#3D374D"
+COLOR_CARD_HEADER = "#2B2638"
+COLOR_INPUT_BG = "#16141D"
+COLOR_INPUT_BORDER = "#433C55"
+COLOR_DROPDOWN_BG = "#292436"
+COLOR_DROPDOWN_HOVER = "#3B344D"
+COLOR_TEXT_WHITE = "#FFFFFF"
+COLOR_TEXT_MUTED = "#A6A0B5"
+COLOR_TEXT_DIM = "#7B758D"
+COLOR_ACCENT_PRIMARY = "#6366F1"        # Vibrant Indigo
+COLOR_ACCENT_PRIMARY_HOVER = "#4F46E5"
+COLOR_ACCENT_CYAN = "#38BDF8"           # Electric Cyan
+COLOR_ACCENT_CYAN_HOVER = "#0284C7"
+COLOR_ACCENT_EMERALD = "#10B981"        # Success Emerald
+COLOR_ACCENT_EMERALD_BG = "#13382D"
+COLOR_ACCENT_ROSE = "#F43F5E"           # Burn/Export Rose
+COLOR_ACCENT_ROSE_HOVER = "#E11D48"
 
 
 class ThaiSubtitleApp(ctk.CTk):
     def __init__(self, initial_video: Optional[str] = None):
         super().__init__()
 
-        self.title("SubFynn - โปรแกรมสร้างซับไทยอัตโนมัติ (AI Thai Subtitle Generator)")
-        self.geometry("940x780")
-        self.minsize(840, 700)
+        self.title("SubFynn - AI Thai Subtitle Studio")
+        self.geometry("1060x880")
+        self.minsize(920, 760)
         self.configure(fg_color=COLOR_BG)
 
-        # Apply Windows 11 Acrylic Glassmorphism effect
+        # Base directories
+        self.base_dir = (
+            os.path.dirname(sys.executable)
+            if getattr(sys, "frozen", False)
+            else os.path.dirname(os.path.abspath(__file__))
+        )
+        self.output_dir = os.path.join(self.base_dir, "data", "SubFynn_Outputs")
+        os.makedirs(self.output_dir, exist_ok=True)
+        self.last_output_dir = self.output_dir
+        self.last_result = None
+        self.video_path = ""
+
+        # Set Window Icon
+        self._setup_icon()
+
+        # Apply Windows 11 Acrylic / Mica effect if available
         try:
             import pywinstyles
             pywinstyles.apply_style(self, "acrylic")
-            pywinstyles.change_border_color(self, COLOR_GLASS_BORDER)
+            pywinstyles.change_border_color(self, COLOR_CARD_BORDER)
             pywinstyles.change_header_color(self, COLOR_BG)
             pywinstyles.change_title_color(self, COLOR_TEXT_WHITE)
         except Exception:
@@ -82,409 +99,456 @@ class ThaiSubtitleApp(ctk.CTk):
         except Exception:
             pass
 
-        self.video_path = ""
-        base_dir = (
-            os.path.dirname(sys.executable)
-            if getattr(sys, "frozen", False)
-            else os.path.dirname(os.path.abspath(__file__))
-        )
-        self.output_dir = os.path.join(base_dir, "data", "SubFynn_Outputs")
-        os.makedirs(self.output_dir, exist_ok=True)
-        self.last_result = None
-
         self._build_ui()
         if initial_video:
             self.load_video(initial_video)
 
-    def _build_ui(self):
-        self.geometry("1080x900")
-        self.minsize(900, 760)
+    def _setup_icon(self):
+        icon_ico = os.path.join(self.base_dir, "assets", "app_icon.ico")
+        if os.path.isfile(icon_ico):
+            try:
+                self.iconbitmap(icon_ico)
+            except Exception:
+                pass
+        icon_png = os.path.join(self.base_dir, "assets", "app_icon.png")
+        if os.path.isfile(icon_png):
+            try:
+                from PIL import Image, ImageTk
+                img = ImageTk.PhotoImage(Image.open(icon_png).resize((64, 64)))
+                self.iconphoto(False, img)
+                self._icon_ref = img
+            except Exception:
+                pass
 
+    def _build_ui(self):
         page = ctk.CTkScrollableFrame(
             self,
             fg_color="transparent",
-            scrollbar_button_color=COLOR_GLASS_BORDER,
-            scrollbar_button_hover_color=COLOR_GLASS_BORDER_TOP,
+            scrollbar_button_color=COLOR_CARD_BORDER,
+            scrollbar_button_hover_color=COLOR_ACCENT_PRIMARY,
         )
-        page.pack(fill="both", expand=True, padx=6, pady=6)
+        page.pack(fill="both", expand=True, padx=12, pady=12)
 
         def make_card(parent=page):
             return ctk.CTkFrame(
                 parent,
-                corner_radius=22,
-                fg_color=COLOR_GLASS_CARD,
+                corner_radius=18,
+                fg_color=COLOR_CARD,
                 border_width=1,
-                border_color=COLOR_GLASS_BORDER,
+                border_color=COLOR_CARD_BORDER,
             )
 
-        # Header mirrors the Web App's brand and status row.
+        # ----------------------------------------------------
+        # 1. Header Bar
+        # ----------------------------------------------------
         header = make_card()
-        header.pack(fill="x", padx=14, pady=(12, 10))
+        header.pack(fill="x", pady=(0, 12))
         header_row = ctk.CTkFrame(header, fg_color="transparent")
-        header_row.pack(fill="x", padx=22, pady=(18, 4))
+        header_row.pack(fill="x", padx=20, pady=16)
 
         brand = ctk.CTkFrame(header_row, fg_color="transparent")
         brand.pack(side="left", fill="x", expand=True)
-        brand_mark = ctk.CTkLabel(
+
+        brand_badge = ctk.CTkLabel(
             brand,
             text="SF",
-            width=48,
-            height=48,
-            corner_radius=15,
-            fg_color="#7055C8",
-            text_color="#FFFFFF",
-            font=ctk.CTkFont(size=17, weight="bold"),
+            width=46,
+            height=46,
+            corner_radius=12,
+            fg_color=COLOR_ACCENT_PRIMARY,
+            text_color=COLOR_TEXT_WHITE,
+            font=ctk.CTkFont(family="Segoe UI", size=18, weight="bold"),
         )
-        brand_mark.pack(side="left", padx=(0, 14))
+        brand_badge.pack(side="left", padx=(0, 14))
 
         title_group = ctk.CTkFrame(brand, fg_color="transparent")
         title_group.pack(side="left", fill="x", expand=True)
+
         ctk.CTkLabel(
             title_group,
             text="SubFynn Studio",
-            font=ctk.CTkFont(size=23, weight="bold"),
+            font=ctk.CTkFont(family="Segoe UI", size=22, weight="bold"),
             text_color=COLOR_TEXT_WHITE,
         ).pack(anchor="w")
+
         ctk.CTkLabel(
             title_group,
-            text="โปรแกรมสร้างซับไทยอัตโนมัติ (AI Thai Subtitle Generator)",
-            font=ctk.CTkFont(size=13),
+            text="AI Thai Subtitle Generator (Windows Desktop Edition)",
+            font=ctk.CTkFont(family="Segoe UI", size=12),
             text_color=COLOR_TEXT_MUTED,
         ).pack(anchor="w", pady=(2, 0))
 
-        header_tools = ctk.CTkFrame(header_row, fg_color="transparent")
-        header_tools.pack(side="right", padx=(12, 0))
-        ctk.CTkLabel(
-            header_tools,
-            text="● Engine Ready",
-            corner_radius=16,
-            fg_color="#173C3A",
-            text_color="#65DDB4",
-            font=ctk.CTkFont(size=12, weight="bold"),
-            padx=14,
-            pady=7,
-        ).pack(side="left", padx=(0, 8))
-        ctk.CTkLabel(
-            header_tools,
-            text="◆ Liquid Glass",
-            corner_radius=16,
-            fg_color="#25345A",
-            text_color="#9FC9FF",
-            font=ctk.CTkFont(size=12, weight="bold"),
-            padx=14,
-            pady=7,
-        ).pack(side="left")
-        # File selection panel, styled after the Web App drop zone.
-        file_card = make_card()
-        file_card.pack(fill="x", padx=14, pady=10)
-        ctk.CTkLabel(
-            file_card,
-            text="เพิ่มไฟล์วิดีโอ",
-            font=ctk.CTkFont(size=17, weight="bold"),
-            text_color=COLOR_TEXT_WHITE,
-        ).pack(anchor="w", padx=22, pady=(18, 12))
+        header_tags = ctk.CTkFrame(header_row, fg_color="transparent")
+        header_tags.pack(side="right")
 
-        drop_zone = ctk.CTkFrame(
+        ctk.CTkLabel(
+            header_tags,
+            text="Whisper Large-v3",
+            corner_radius=10,
+            fg_color="#213247",
+            text_color=COLOR_ACCENT_CYAN,
+            font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
+            padx=12,
+            pady=6,
+        ).pack(side="left", padx=(0, 8))
+
+        ctk.CTkLabel(
+            header_tags,
+            text="Standalone EXE",
+            corner_radius=10,
+            fg_color=COLOR_ACCENT_EMERALD_BG,
+            text_color=COLOR_ACCENT_EMERALD,
+            font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
+            padx=12,
+            pady=6,
+        ).pack(side="left")
+
+        # ----------------------------------------------------
+        # 2. File Selection Zone
+        # ----------------------------------------------------
+        file_card = make_card()
+        file_card.pack(fill="x", pady=8)
+
+        ctk.CTkLabel(
             file_card,
-            corner_radius=19,
-            fg_color="#201F4A",
-            border_width=1,
-            border_color="#5F59A2",
-        )
-        drop_zone.pack(fill="x", padx=22, pady=(0, 14))
-        ctk.CTkLabel(drop_zone, text="🎬", font=ctk.CTkFont(size=34)).pack(pady=(15, 2))
-        ctk.CTkLabel(
-            drop_zone,
-            text="คลิกปุ่มด้านล่างเพื่อเลือกไฟล์วิดีโอ",
-            font=ctk.CTkFont(size=16, weight="bold"),
+            text="เลือกไฟล์วิดีโอ (Source Video File)",
+            font=ctk.CTkFont(family="Segoe UI", size=15, weight="bold"),
             text_color=COLOR_TEXT_WHITE,
-        ).pack(pady=(0, 3))
-        ctk.CTkLabel(
-            drop_zone,
-            text="รองรับ MP4, MKV, MOV, AVI, WEBM, FLV, TS (สูงสุด 2GB)",
-            font=ctk.CTkFont(size=12),
-            text_color=COLOR_TEXT_MUTED,
-        ).pack(pady=(0, 14))
+        ).pack(anchor="w", padx=20, pady=(16, 8))
 
         file_row = ctk.CTkFrame(file_card, fg_color="transparent")
-        file_row.pack(fill="x", padx=22, pady=(0, 18))
+        file_row.pack(fill="x", padx=20, pady=(0, 16))
+
         self.file_entry = ctk.CTkEntry(
             file_row,
-            placeholder_text="ยังไม่ได้เลือกไฟล์วิดีโอ",
-            font=ctk.CTkFont(size=13),
-            corner_radius=13,
+            placeholder_text="คลิกปุ่มเลือกไฟล์ หรือลากไฟล์วิดีโอมาวางที่นี่",
+            font=ctk.CTkFont(family="Segoe UI", size=13),
+            corner_radius=12,
             fg_color=COLOR_INPUT_BG,
             border_width=1,
-            border_color=COLOR_GLASS_BORDER,
+            border_color=COLOR_INPUT_BORDER,
             text_color=COLOR_TEXT_WHITE,
             placeholder_text_color=COLOR_TEXT_DIM,
             height=42,
         )
         self.file_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
+
         browse_btn = ctk.CTkButton(
             file_row,
-            text="📁 เลือกไฟล์...",
-            width=142,
+            text="เลือกไฟล์...",
+            width=130,
             height=42,
-            corner_radius=13,
-            fg_color="#3A3976",
-            hover_color="#4D4B91",
+            corner_radius=12,
+            fg_color=COLOR_DROPDOWN_BG,
+            hover_color=COLOR_DROPDOWN_HOVER,
             border_width=1,
-            border_color="#7772C2",
+            border_color=COLOR_CARD_BORDER,
             text_color=COLOR_TEXT_WHITE,
-            font=ctk.CTkFont(size=13, weight="bold"),
+            font=ctk.CTkFont(family="Segoe UI", size=13, weight="bold"),
             command=self.browse_video,
         )
         browse_btn.pack(side="right")
 
-        # Two-column options grid follows the same reading order as the Web App.
+        # ----------------------------------------------------
+        # 3. Model Configuration Grid
+        # ----------------------------------------------------
         options_card = make_card()
-        options_card.pack(fill="x", padx=14, pady=10)
-        options_grid = ctk.CTkFrame(options_card, fg_color="transparent")
-        options_grid.pack(fill="x", padx=16, pady=(16, 8))
-        options_grid.grid_columnconfigure(0, weight=1, uniform="option-columns")
-        options_grid.grid_columnconfigure(1, weight=1, uniform="option-columns")
+        options_card.pack(fill="x", pady=8)
 
-        self.model_var = ctk.StringVar(value="base")
-        self.style_var = ctk.StringVar(value="jav (หนังผู้ใหญ่ 18+ มาตรฐานแฟนซับ)")
-        self.gemini_model_var = ctk.StringVar(value="gemini-2.5-flash (แนะนำ เร็ว ฉลาด)")
+        ctk.CTkLabel(
+            options_card,
+            text="ตั้งค่าโมเดลและการแปลภาษา (Engine & Translation Settings)",
+            font=ctk.CTkFont(family="Segoe UI", size=15, weight="bold"),
+            text_color=COLOR_TEXT_WHITE,
+        ).pack(anchor="w", padx=20, pady=(16, 12))
+
+        options_grid = ctk.CTkFrame(options_card, fg_color="transparent")
+        options_grid.pack(fill="x", padx=14, pady=(0, 16))
+        options_grid.grid_columnconfigure(0, weight=1, uniform="opt-col")
+        options_grid.grid_columnconfigure(1, weight=1, uniform="opt-col")
+
+        # Variables
+        self.model_var = ctk.StringVar(value="large-v3 (โมเดลแม่นยำสูงสุด ล็อคมาตรฐาน)")
+        self.style_var = ctk.StringVar(value="jav_dirty (หนังผู้ใหญ่ 18+ หยาบคายได้เต็มที่ / Dirty Talk)")
+        self.gemini_model_var = ctk.StringVar(value="gemini-3.5-live-translate-preview (Gemini Live Translate)")
         self.embed_mode_var = ctk.StringVar(value="burn (ฝังซับติดภาพถาวร)")
         self.lang_var = ctk.StringVar(value="ja (ญี่ปุ่น - แนะนำ JAV)")
 
-        def add_option(row, column, label_text, values, variable):
-            field = ctk.CTkFrame(options_grid, fg_color="transparent")
-            field.grid(row=row, column=column, sticky="ew", padx=8, pady=9)
+        def create_dropdown_field(row, column, label_title, options, var_ref):
+            box = ctk.CTkFrame(options_grid, fg_color="transparent")
+            box.grid(row=row, column=column, sticky="ew", padx=6, pady=8)
             ctk.CTkLabel(
-                field,
-                text=label_text,
-                font=ctk.CTkFont(size=13, weight="bold"),
+                box,
+                text=label_title,
+                font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"),
                 text_color=COLOR_TEXT_WHITE,
-            ).pack(anchor="w", pady=(0, 7))
+            ).pack(anchor="w", pady=(0, 6))
+
             menu = ctk.CTkOptionMenu(
-                field,
-                values=values,
-                variable=variable,
-                corner_radius=12,
-                height=40,
+                box,
+                values=options,
+                variable=var_ref,
+                corner_radius=11,
+                height=38,
                 fg_color=COLOR_DROPDOWN_BG,
-                button_color="#403E79",
-                button_hover_color="#56539A",
+                button_color=COLOR_CARD_BORDER,
+                button_hover_color=COLOR_DROPDOWN_HOVER,
                 text_color=COLOR_TEXT_WHITE,
                 dropdown_fg_color=COLOR_INPUT_BG,
                 dropdown_text_color=COLOR_TEXT_WHITE,
-                dropdown_hover_color="#3A376B",
-                font=ctk.CTkFont(size=13),
-                dropdown_font=ctk.CTkFont(size=13),
+                dropdown_hover_color=COLOR_DROPDOWN_HOVER,
+                font=ctk.CTkFont(family="Segoe UI", size=12),
+                dropdown_font=ctk.CTkFont(family="Segoe UI", size=12),
             )
             menu.pack(fill="x")
             return menu
 
-        self.model_menu = add_option(0, 0, "ขนาดโมเดล Whisper (AI Speech-to-Text)", [
-            "base (แนะนำทั่วไป)", "tiny (เร็วสุด)", "small (แม่นยำ)",
-            "medium (แม่นยำสูง แนะนำ JAV/ญี่ปุ่น)", "large-v3 (แม่นยำสูงสุด สำหรับ JAV 18+)",
-        ], self.model_var)
-        # Keep the backend's expected model value while showing the friendly label.
-        self.model_var.set("base")
-        self.style_menu = add_option(0, 1, "สไตล์การแปลคำบรรยาย", [
-            "jav (หนังผู้ใหญ่ 18+ มาตรฐานแฟนซับ)",
-            "jav_dirty (หนังผู้ใหญ่ 18+ หยาบคายได้เต็มที่ / Dirty Talk)",
-            "jav_hardcore (หนังผู้ใหญ่ 18+ Hardcore ดิบเถื่อน หยาบคายขั้นสุด)",
-            "jav_sweet (หนังผู้ใหญ่ 18+ สายหวานอ้อน)", "general (ทั่วไป / ภาพยนตร์)",
-            "anime (อนิเมะ / การ์ตูน)", "drama (ดราม่า / ซีรีส์)",
-        ], self.style_var)
-        self.gemini_model_menu = add_option(1, 0, "โมเดล AI แปลภาษา (Translation Model)", [
-            "gemini-2.5-flash (แนะนำ เร็ว ฉลาด)",
-            "gemini-2.5-pro (แปลได้อารมณ์ลึกซึ้งขั้นสุด)",
-            "gemini-2.5-flash-lite (เร็วขั้นสุด ประหยัดโควตา)",
-            "gemini-2.0-flash (เสถียร รวดเร็ว)", "gemini-2.0-flash-lite (เบา รวดเร็ว)",
-            "gemini-1.5-flash (ประหยัดโควตา)", "gemini-1.5-pro (ละเอียด แม่นยำ)",
-        ], self.gemini_model_var)
-        self.embed_mode_menu = add_option(1, 1, "เอาซับใส่คลิปวิดีโอทันที (Auto-embed)", [
-            "burn (ฝังซับติดภาพถาวร)", "soft (ฝังซับในไฟล์เร็ว 1 วิ)",
-            "both (ทำทั้ง 2 แบบ)", "none (เฉพาะไฟล์ .SRT)",
-        ], self.embed_mode_var)
-        self.lang_menu = add_option(2, 0, "ภาษาเสียงพูดต้นฉบับ", [
-            "ja (ญี่ปุ่น - แนะนำ JAV)", "auto (ตรวจจับอัตโนมัติ)", "en (อังกฤษ)",
-            "zh (จีน)", "ko (เกาหลี)", "th (ไทย)",
-        ], self.lang_var)
+        # Row 0: STT Model (Locked to Large-v3) & Translation Style
+        self.model_menu = create_dropdown_field(
+            0, 0,
+            "โมเดล Whisper Speech-to-Text (ค่าเริ่มต้น Large-v3)",
+            [
+                "large-v3 (โมเดลแม่นยำสูงสุด ล็อคมาตรฐาน)",
+            ],
+            self.model_var,
+        )
+
+        self.style_menu = create_dropdown_field(
+            0, 1,
+            "สไตล์การแปลคำบรรยายไทย",
+            [
+                "jav_dirty (หนังผู้ใหญ่ 18+ หยาบคายได้เต็มที่ / Dirty Talk)",
+                "jav (หนังผู้ใหญ่ 18+ มาตรฐานแฟนซับ)",
+                "jav_sweet (หนังผู้ใหญ่ 18+ สายหวานอ้อน)",
+                "general (ทั่วไป / ภาพยนตร์)",
+                "anime (อนิเมะ / ซีรีส์)",
+            ],
+            self.style_var,
+        )
+
+        # Row 1: 3 Specialized Gemini Models & Auto-embed mode
+        self.gemini_model_menu = create_dropdown_field(
+            1, 0,
+            "โมเดล AI แปลภาษาเฉพาะทาง (3 รุ่นล่าสุด)",
+            [
+                "gemini-3.5-live-translate-preview (Gemini Live Translate)",
+                "cloud-translation-llm (Cloud Translation LLM)",
+                "gemini-2.5-flash (Gemini Adaptive Translation)",
+            ],
+            self.gemini_model_var,
+        )
+
+        self.embed_mode_menu = create_dropdown_field(
+            1, 1,
+            "การนำซับไตเติลใส่คลิปวิดีโอ",
+            [
+                "burn (ฝังซับติดภาพถาวร)",
+                "soft (ฝังซับในไฟล์เร็ว)",
+                "both (บันทึกทั้ง 2 แบบ)",
+                "none (เฉพาะไฟล์ .SRT)",
+            ],
+            self.embed_mode_var,
+        )
+
+        # Row 2: Source Audio Language & Gemini API Key
+        self.lang_menu = create_dropdown_field(
+            2, 0,
+            "ภาษาเสียงพูดต้นฉบับ",
+            [
+                "ja (ญี่ปุ่น - แนะนำ JAV)",
+                "auto (ตรวจจับอัตโนมัติ)",
+                "en (อังกฤษ)",
+                "zh (จีน)",
+                "ko (เกาหลี)",
+                "th (ไทย)",
+            ],
+            self.lang_var,
+        )
 
         api_field = ctk.CTkFrame(options_grid, fg_color="transparent")
-        api_field.grid(row=2, column=1, sticky="ew", padx=8, pady=9)
+        api_field.grid(row=2, column=1, sticky="ew", padx=6, pady=8)
         ctk.CTkLabel(
             api_field,
-            text="Google Gemini API Key (ไม่บังคับ)",
-            font=ctk.CTkFont(size=13, weight="bold"),
+            text="Google Gemini API Key (ไม่บังคับ - เว้นว่างเพื่อใช้ระบบฟรี)",
+            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"),
             text_color=COLOR_TEXT_WHITE,
-        ).pack(anchor="w", pady=(0, 7))
+        ).pack(anchor="w", pady=(0, 6))
+
         self.gemini_entry = ctk.CTkEntry(
             api_field,
-            placeholder_text="วาง API Key หรือเว้นว่างเพื่อใช้ระบบแปลฟรี",
+            placeholder_text="วาง Gemini API Key ที่นี่ (ถ้ามี)",
             show="*",
-            corner_radius=12,
+            corner_radius=11,
             fg_color=COLOR_INPUT_BG,
             border_width=1,
-            border_color=COLOR_GLASS_BORDER,
+            border_color=COLOR_INPUT_BORDER,
             text_color=COLOR_TEXT_WHITE,
             placeholder_text_color=COLOR_TEXT_DIM,
-            height=40,
-            font=ctk.CTkFont(size=13),
+            height=38,
+            font=ctk.CTkFont(family="Segoe UI", size=12),
         )
         self.gemini_entry.pack(fill="x")
 
-        jav_notice = ctk.CTkFrame(
-            options_card,
-            corner_radius=14,
-            fg_color="#30204A",
-            border_width=1,
-            border_color="#7953A5",
-        )
-        jav_notice.pack(fill="x", padx=24, pady=(8, 18))
-        ctk.CTkLabel(
-            jav_notice,
-            text="🔞 โหมดแปล JAV / หนังผู้ใหญ่ 18+: แปลเป็นธรรมชาติ พร้อมตัดเสียงครางวนซ้ำ",
-            font=ctk.CTkFont(size=13, weight="bold"),
-            text_color="#E4B5FF",
-            wraplength=900,
-            justify="left",
-        ).pack(anchor="w", padx=14, pady=10)
-
-        # Primary action and progress status.
+        # ----------------------------------------------------
+        # 4. Action & Progress Zone
+        # ----------------------------------------------------
         action_card = make_card()
-        action_card.pack(fill="x", padx=14, pady=10)
+        action_card.pack(fill="x", pady=8)
+
         self.start_btn = ctk.CTkButton(
             action_card,
-            text="✨ เริ่มสร้างซับไทย (Generate Thai Subtitles)",
-            font=ctk.CTkFont(size=16, weight="bold"),
-            height=52,
-            corner_radius=15,
-            fg_color="#6659E8",
-            hover_color="#7A6CF2",
-            text_color="#FFFFFF",
-            border_width=1,
-            border_color="#A59AFF",
+            text="เริ่มสร้างซับไทย (Start Subtitle Generation)",
+            font=ctk.CTkFont(family="Segoe UI", size=15, weight="bold"),
+            height=48,
+            corner_radius=13,
+            fg_color=COLOR_ACCENT_PRIMARY,
+            hover_color=COLOR_ACCENT_PRIMARY_HOVER,
+            text_color=COLOR_TEXT_WHITE,
             command=self.start_processing,
         )
-        self.start_btn.pack(fill="x", padx=22, pady=(18, 10))
+        self.start_btn.pack(fill="x", padx=20, pady=(16, 10))
+
         self.progress_bar = ctk.CTkProgressBar(
             action_card,
-            corner_radius=6,
-            height=9,
-            fg_color="#15182E",
+            corner_radius=5,
+            height=8,
+            fg_color=COLOR_INPUT_BG,
             progress_color=COLOR_ACCENT_CYAN,
         )
-        self.progress_bar.pack(fill="x", padx=22, pady=(0, 8))
+        self.progress_bar.pack(fill="x", padx=20, pady=(0, 8))
         self.progress_bar.set(0)
+
         self.status_lbl = ctk.CTkLabel(
             action_card,
             text="พร้อมทำงาน กรุณาเลือกไฟล์วิดีโอแล้วกดเริ่มสร้างซับ",
-            font=ctk.CTkFont(size=13),
+            font=ctk.CTkFont(family="Segoe UI", size=13),
             text_color=COLOR_TEXT_MUTED,
             wraplength=980,
         )
-        self.status_lbl.pack(padx=18, pady=(0, 16))
+        self.status_lbl.pack(padx=20, pady=(0, 16))
 
-        # Output editor and export actions.
+        # ----------------------------------------------------
+        # 5. Interactive Subtitle Editor & Exporter
+        # ----------------------------------------------------
         out_card = make_card()
-        out_card.pack(fill="both", expand=True, padx=14, pady=(10, 16))
+        out_card.pack(fill="both", expand=True, pady=(8, 12))
+
         out_header = ctk.CTkFrame(out_card, fg_color="transparent")
-        out_header.pack(fill="x", padx=20, pady=(17, 10))
+        out_header.pack(fill="x", padx=20, pady=(16, 10))
+
         ctk.CTkLabel(
             out_header,
-            text="🎬 ตัวอย่างวิดีโอและคำบรรยายซับไทย (.SRT)",
-            font=ctk.CTkFont(size=16, weight="bold"),
+            text="ตารางแก้ไขคำบรรยายซับไทย (Subtitle Editor)",
+            font=ctk.CTkFont(family="Segoe UI", size=15, weight="bold"),
             text_color=COLOR_TEXT_WHITE,
         ).pack(side="left")
+
+        self.sub_count_lbl = ctk.CTkLabel(
+            out_header,
+            text="0 บรรทัด",
+            font=ctk.CTkFont(family="Segoe UI", size=12),
+            text_color=COLOR_TEXT_DIM,
+        )
+        self.sub_count_lbl.pack(side="left", padx=(10, 0))
+
+        # Time Shifting Controls
         self.shift_plus_btn = ctk.CTkButton(
             out_header,
-            text="⏩ +0.5s",
-            width=82,
-            height=32,
-            corner_radius=11,
-            font=ctk.CTkFont(size=12, weight="bold"),
-            fg_color="#2B3154",
-            hover_color="#3D4774",
+            text="+0.5 วินาที",
+            width=90,
+            height=30,
+            corner_radius=9,
+            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"),
+            fg_color=COLOR_DROPDOWN_BG,
+            hover_color=COLOR_DROPDOWN_HOVER,
             border_width=1,
-            border_color=COLOR_GLASS_BORDER,
+            border_color=COLOR_CARD_BORDER,
             text_color=COLOR_TEXT_WHITE,
             command=lambda: self.shift_time(0.5),
             state="disabled",
         )
-        self.shift_plus_btn.pack(side="right", padx=(7, 0))
+        self.shift_plus_btn.pack(side="right", padx=(6, 0))
+
         self.shift_minus_btn = ctk.CTkButton(
             out_header,
-            text="⏪ -0.5s",
-            width=82,
-            height=32,
-            corner_radius=11,
-            font=ctk.CTkFont(size=12, weight="bold"),
-            fg_color="#2B3154",
-            hover_color="#3D4774",
+            text="-0.5 วินาที",
+            width=90,
+            height=30,
+            corner_radius=9,
+            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"),
+            fg_color=COLOR_DROPDOWN_BG,
+            hover_color=COLOR_DROPDOWN_HOVER,
             border_width=1,
-            border_color=COLOR_GLASS_BORDER,
+            border_color=COLOR_CARD_BORDER,
             text_color=COLOR_TEXT_WHITE,
             command=lambda: self.shift_time(-0.5),
             state="disabled",
         )
         self.shift_minus_btn.pack(side="right")
+
+        # Subtitle Textbox (Compatible & full-view editable)
         self.srt_textbox = ctk.CTkTextbox(
             out_card,
-            font=ctk.CTkFont(family="Consolas", size=14),
-            corner_radius=15,
+            font=ctk.CTkFont(family="Consolas", size=13),
+            corner_radius=12,
             fg_color=COLOR_INPUT_BG,
             border_width=1,
-            border_color=COLOR_GLASS_BORDER,
+            border_color=COLOR_INPUT_BORDER,
             text_color=COLOR_TEXT_WHITE,
+            height=260,
         )
-        self.srt_textbox.pack(fill="both", expand=True, padx=20, pady=(0, 12))
+        self.srt_textbox.pack(fill="both", expand=True, padx=20, pady=(0, 14))
 
+        # Bottom Action Bar
         export_row = ctk.CTkFrame(out_card, fg_color="transparent")
         export_row.pack(fill="x", padx=20, pady=(0, 18))
+
         self.save_srt_btn = ctk.CTkButton(
             export_row,
-            text="💾 บันทึกไฟล์ซับ (.SRT)",
+            text="บันทึกไฟล์ซับ (.SRT)",
             command=self.save_srt,
             state="disabled",
-            width=185,
+            width=180,
             height=40,
-            corner_radius=12,
-            fg_color="#2B3154",
-            hover_color="#3D4774",
+            corner_radius=11,
+            fg_color=COLOR_DROPDOWN_BG,
+            hover_color=COLOR_DROPDOWN_HOVER,
             border_width=1,
-            border_color=COLOR_GLASS_BORDER,
+            border_color=COLOR_CARD_BORDER,
             text_color=COLOR_TEXT_WHITE,
-            font=ctk.CTkFont(size=12, weight="bold"),
+            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"),
         )
         self.save_srt_btn.pack(side="left", padx=(0, 10))
+
         self.burn_btn = ctk.CTkButton(
             export_row,
-            text="🎬 ฝังซับลงวิดีโอ (Burn-in MP4)",
+            text="ฝังซับลงวิดีโอ (Burn-in MP4)",
             command=self.burn_video,
             state="disabled",
-            fg_color=COLOR_ACCENT_PINK,
-            hover_color=COLOR_ACCENT_PINK_HOVER,
-            border_width=1,
-            border_color="#D49BC7",
-            text_color="#FFFFFF",
-            font=ctk.CTkFont(size=12, weight="bold"),
-            width=230,
+            fg_color=COLOR_ACCENT_ROSE,
+            hover_color=COLOR_ACCENT_ROSE_HOVER,
+            text_color=COLOR_TEXT_WHITE,
+            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"),
+            width=210,
             height=40,
-            corner_radius=12,
+            corner_radius=11,
         )
         self.burn_btn.pack(side="left", padx=(0, 10))
+
         self.open_folder_btn = ctk.CTkButton(
             export_row,
-            text="📂 เปิดโฟลเดอร์ผลลัพธ์",
+            text="เปิดโฟลเดอร์ผลลัพธ์",
             command=self.open_output_folder,
             state="disabled",
             fg_color=COLOR_ACCENT_EMERALD_BG,
-            hover_color="#185744",
+            hover_color="#18503E",
             border_width=1,
             border_color=COLOR_ACCENT_EMERALD,
-            text_color="#76E4B9",
-            font=ctk.CTkFont(size=12, weight="bold"),
-            width=190,
+            text_color=COLOR_ACCENT_EMERALD,
+            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"),
+            width=180,
             height=40,
-            corner_radius=12,
+            corner_radius=11,
         )
         self.open_folder_btn.pack(side="left")
 
@@ -497,7 +561,10 @@ class ThaiSubtitleApp(ctk.CTk):
             self.file_entry.delete(0, "end")
             self.file_entry.insert(0, abs_path)
             size_mb = os.path.getsize(abs_path) / (1024 * 1024)
-            self.status_lbl.configure(text=f"เลือกไฟล์: {os.path.basename(abs_path)} ({size_mb:.1f} MB)", text_color="white")
+            self.status_lbl.configure(
+                text=f"เลือกไฟล์: {os.path.basename(abs_path)} ({size_mb:.1f} MB)",
+                text_color=COLOR_TEXT_WHITE,
+            )
 
     def browse_video(self):
         filetypes = [
@@ -512,18 +579,21 @@ class ThaiSubtitleApp(ctk.CTk):
     def start_processing(self):
         video_file = self.file_entry.get().strip()
         if not video_file or not os.path.isfile(video_file):
-            messagebox.showwarning("แจ้งเตือน", "กรุณาเลือกไฟล์วิดีโอที่ถูกต้อง")
+            messagebox.showwarning("แจ้งเตือน", "กรุณาเลือกไฟล์วิดีโอที่ถูกต้องก่อนเริ่ม")
             return
 
         self.video_path = video_file
-        model_choice = self.model_var.get().split()[0]
+        model_choice = "large-v3"  # Default locked to Large-v3
+        raw_model_val = self.model_var.get().strip().split()[0].lower()
+        if raw_model_val in ("large-v3", "large", "medium", "small", "base", "tiny"):
+            model_choice = raw_model_val
+
         lang_choice = self.lang_var.get().split()[0]
         style_choice = self.style_var.get().split()[0]
         gemini_model_choice = self.gemini_model_var.get().split()[0]
         gemini_key = self.gemini_entry.get().strip()
         embed_choice = self.embed_mode_var.get().split()[0]
 
-        # Use same directory as input video so user finds their output right next to original video!
         video_dir = os.path.dirname(os.path.abspath(self.video_path))
         target_output_dir = video_dir if os.path.isdir(video_dir) else self.output_dir
         self.last_output_dir = target_output_dir
@@ -535,7 +605,7 @@ class ThaiSubtitleApp(ctk.CTk):
         self.shift_minus_btn.configure(state="disabled")
         self.shift_plus_btn.configure(state="disabled")
         self.progress_bar.set(0.05)
-        self.status_lbl.configure(text="กำลังเริ่มต้นกระบวนการ...", text_color="#38bdf8")
+        self.status_lbl.configure(text="กำลังเริ่มต้นกระบวนการ...", text_color=COLOR_ACCENT_CYAN)
 
         def worker():
             def on_progress(pct, msg):
@@ -573,23 +643,33 @@ class ThaiSubtitleApp(ctk.CTk):
         self.shift_minus_btn.configure(state="normal")
         self.shift_plus_btn.configure(state="normal")
         self.progress_bar.set(1.0)
-        self.status_lbl.configure(text="✅ สร้างซับไทยและนำซับใส่คลิปสำเร็จเรียบร้อย!", text_color="#10b981")
+        self.status_lbl.configure(
+            text="สร้างซับไทยและนำซับใส่คลิปสำเร็จเรียบร้อย",
+            text_color=COLOR_ACCENT_EMERALD,
+        )
 
+        srt_text = res.get("srt_content", "")
         self.srt_textbox.delete("1.0", "end")
-        self.srt_textbox.insert("1.0", res["srt_content"])
+        self.srt_textbox.insert("1.0", srt_text)
+
+        segs_count = len(res.get("segments", []))
+        self.sub_count_lbl.configure(text=f"{segs_count} บรรทัด")
 
         vid_path = res.get("video_output_path") or res.get("burned_video_path") or res.get("softsub_video_path")
         if vid_path and os.path.isfile(vid_path):
             msg = (
-                f"สร้างซับไทยและนำซับใส่คลิปเสร็จเรียบร้อยแล้ว!\n\n"
-                f"🎬 ไฟล์วิดีโอ: {os.path.basename(vid_path)}\n"
-                f"📁 ที่อยู่ไฟล์: {os.path.dirname(vid_path)}\n\n"
+                f"สร้างซับไทยและนำซับใส่คลิปเสร็จเรียบร้อยแล้ว\n\n"
+                f"ไฟล์วิดีโอ: {os.path.basename(vid_path)}\n"
+                f"ที่อยู่ไฟล์: {os.path.dirname(vid_path)}\n\n"
                 f"ต้องการเปิดโฟลเดอร์ดูไฟล์ทันทีเลยหรือไม่?"
             )
             if messagebox.askyesno("สำเร็จ", msg):
                 self.open_output_folder()
         else:
-            messagebox.showinfo("สำเร็จ", f"สร้างซับไทยเสร็จแล้ว! ตรวจพบภาษา: {res['detected_language']} ({len(res['segments'])} ท่อน)")
+            messagebox.showinfo(
+                "สำเร็จ",
+                f"สร้างซับไทยเสร็จเรียบร้อย ตรวจพบภาษา: {res.get('detected_language', 'ja')} ({segs_count} ท่อน)",
+            )
 
     def open_output_folder(self):
         target_dir = getattr(self, "last_output_dir", self.output_dir)
@@ -600,24 +680,10 @@ class ThaiSubtitleApp(ctk.CTk):
         else:
             subprocess.Popen(["xdg-open", target_dir])
 
-    def open_web_mode(self):
-        try:
-            from app import start_server_in_background
-            import webbrowser
-            port = start_server_in_background(port=5000)
-            url = f"http://127.0.0.1:{port}"
-            webbrowser.open(url)
-            self.status_lbl.configure(
-                text=f"🌐 เปิด Web App บนเบราว์เซอร์ที่ {url} เรียบร้อยแล้ว",
-                text_color="#38bdf8",
-            )
-        except Exception as e:
-            messagebox.showerror("ข้อผิดพลาด", f"ไม่สามารถเปิด Web App ได้: {e}")
-
     def _on_error(self, err_msg):
         self.start_btn.configure(state="normal")
         self.progress_bar.set(0.0)
-        self.status_lbl.configure(text=f"❌ เกิดข้อผิดพลาด: {err_msg}", text_color="#ef4444")
+        self.status_lbl.configure(text=f"เกิดข้อผิดพลาด: {err_msg}", text_color=COLOR_ACCENT_ROSE)
         messagebox.showerror("ข้อผิดพลาด", f"ไม่สามารถสร้างซับไทยได้:\n{err_msg}")
 
     def shift_time(self, offset_seconds: float):
@@ -636,7 +702,10 @@ class ThaiSubtitleApp(ctk.CTk):
         if "srt_path" in self.last_result and os.path.isfile(self.last_result["srt_path"]):
             with open(self.last_result["srt_path"], "w", encoding="utf-8") as f:
                 f.write(new_srt)
-        self.status_lbl.configure(text=f"ปรับเลื่อนเวลาซับ {offset_seconds:+.1f} วินาทีเรียบร้อย", text_color="#38bdf8")
+        self.status_lbl.configure(
+            text=f"ปรับเลื่อนเวลาซับ {offset_seconds:+.1f} วินาทีเรียบร้อย",
+            text_color=COLOR_ACCENT_CYAN,
+        )
 
     def save_srt(self):
         if not self.last_result:
@@ -664,7 +733,6 @@ class ThaiSubtitleApp(ctk.CTk):
         if not save_video_path:
             return
 
-        # Write current editor content back to srt before burning
         import time
         current_srt = self.srt_textbox.get("1.0", "end").strip()
         temp_srt = os.path.join(self.output_dir, f"temp_burn_{int(time.time() * 1000)}.srt")
@@ -672,7 +740,7 @@ class ThaiSubtitleApp(ctk.CTk):
             f.write(current_srt)
 
         self.burn_btn.configure(state="disabled")
-        self.status_lbl.configure(text="กำลังฝังซับไตเติลลงวิดีโอด้วย FFmpeg...", text_color="#38bdf8")
+        self.status_lbl.configure(text="กำลังฝังซับไตเติลลงวิดีโอด้วย FFmpeg...", text_color=COLOR_ACCENT_CYAN)
 
         def burn_worker():
             try:
@@ -681,11 +749,29 @@ class ThaiSubtitleApp(ctk.CTk):
                     srt_path=temp_srt,
                     output_video_path=save_video_path,
                 )
-                self.after(0, lambda: messagebox.showinfo("สำเร็จ", f"ฝังซับและบันทึกวิดีโอเรียบร้อยแล้วที่:\n{save_video_path}"))
-                self.after(0, lambda: self.status_lbl.configure(text="✅ ฝังซับลงวิดีโอเรียบร้อย!", text_color="#10b981"))
+                self.after(
+                    0,
+                    lambda: messagebox.showinfo(
+                        "สำเร็จ",
+                        f"ฝังซับและบันทึกวิดีโอเรียบร้อยแล้วที่:\n{save_video_path}",
+                    ),
+                )
+                self.after(
+                    0,
+                    lambda: self.status_lbl.configure(
+                        text="ฝังซับลงวิดีโอเรียบร้อย",
+                        text_color=COLOR_ACCENT_EMERALD,
+                    ),
+                )
             except Exception as e:
                 self.after(0, lambda: messagebox.showerror("ข้อผิดพลาด", f"การฝังซับล้มเหลว:\n{str(e)}"))
-                self.after(0, lambda: self.status_lbl.configure(text=f"❌ ฝังซับล้มเหลว: {str(e)}", text_color="#ef4444"))
+                self.after(
+                    0,
+                    lambda: self.status_lbl.configure(
+                        text=f"ฝังซับล้มเหลว: {str(e)}",
+                        text_color=COLOR_ACCENT_ROSE,
+                    ),
+                )
             finally:
                 if os.path.isfile(temp_srt):
                     try:
