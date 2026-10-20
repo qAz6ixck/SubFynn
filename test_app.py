@@ -196,6 +196,47 @@ class TestWebAppServer(unittest.TestCase):
             self.assertEqual(e.code, 416)
             e.close()
 
+    def test_chunked_upload_flow(self):
+        # Test multi-part chunked upload endpoint (/api/upload_chunk)
+        with open(self.test_video, "rb") as f:
+            video_bytes = f.read()
+
+        total_size = len(video_bytes)
+        chunk_size = 5000  # Split into multiple chunks
+        total_chunks = (total_size + chunk_size - 1) // chunk_size
+
+        upload_task_id = ""
+        for i in range(total_chunks):
+            start = i * chunk_size
+            end = min(total_size, start + chunk_size)
+            chunk_data = video_bytes[start:end]
+
+            chunk_url = (
+                f"http://127.0.0.1:{self.port}/api/upload_chunk?"
+                f"filename=chunked_test.mp4&chunk_index={i}&total_chunks={total_chunks}"
+                f"&total_size={total_size}"
+            )
+            if upload_task_id:
+                chunk_url += f"&task_id={upload_task_id}"
+
+            req = urllib.request.Request(
+                chunk_url,
+                data=chunk_data,
+                headers={"Content-Type": "application/octet-stream"},
+            )
+            with urllib.request.urlopen(req) as resp:
+                self.assertEqual(resp.status, 200)
+                res_data = json.loads(resp.read().decode("utf-8"))
+                self.assertTrue(res_data["success"])
+                if not upload_task_id:
+                    upload_task_id = res_data["task_id"]
+
+                if i == total_chunks - 1:
+                    self.assertTrue(res_data.get("completed"))
+                    self.assertEqual(res_data["task_id"], upload_task_id)
+                else:
+                    self.assertFalse(res_data.get("completed", False))
+
     def test_find_available_port_fallback(self):
         from app import find_available_port
         # self.port is currently occupied by our test HTTP server

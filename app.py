@@ -1145,13 +1145,34 @@ INDEX_HTML = """<!DOCTYPE html>
             }
         }
 
-        function startProcessing() {
+        async function triggerProcessing(taskId) {
+            const progressStatus = document.getElementById('progressStatus');
+            progressStatus.innerText = 'อัปโหลดสำเร็จ กำลังเริ่มต้นขั้นตอนถอดเสียง...';
+
+            await fetch('/api/process', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    task_id: taskId,
+                    model_size: document.getElementById('modelSelect').value,
+                    source_lang: document.getElementById('langSelect').value,
+                    translation_style: document.getElementById('styleSelect').value,
+                    gemini_model: document.getElementById('geminiModelSelect').value,
+                    gemini_api_key: document.getElementById('geminiKey').value.trim(),
+                    embed_mode: document.getElementById('embedModeSelect') ? document.getElementById('embedModeSelect').value : 'burn'
+                })
+            });
+
+            pollProgress(taskId);
+        }
+
+        async function startProcessing() {
             if (!currentFile) return;
 
             // Check Vercel 4.5MB Serverless Payload limit
             if (isVercelHost() && currentFile.size > 4.5 * 1024 * 1024) {
                 const sizeMB = (currentFile.size / (1024 * 1024)).toFixed(1);
-                alert(`ไม่สามารถอัปโหลดไฟล์ขนาด ${sizeMB} MB บน Vercel Cloud ได้\n\nสาเหตุ: ระบบ Vercel Serverless จำกัดขนาดไฟล์ไม่เกิน 4.5 MB ต่อคำขอ (HTTP 413)\n\nวิธีใช้งานที่ถูกต้อง:\nกรุณาเปิดใช้งาน Web App บนเครื่องคอมพิวเตอร์ของคุณด้วยไฟล์ "start_web.bat" หรือรันคำสั่ง "python app.py"\n(โหมดเครื่องรองรับไฟล์ขนาดใหญ่ได้ไม่จำกัดถึง 2GB+ พร้อมประมวลผลด้วย GPU และ Whisper Large-v3 ได้เต็มสปีดครับ)`);
+                alert(`ไม่สามารถอัปโหลดไฟล์ขนาด ${sizeMB} MB บน Vercel Cloud ได้\n\nสาเหตุ: ระบบ Vercel Serverless จำกัดขนาดไฟล์ไม่เกิน 4.5 MB ต่อคำขอ (HTTP 413)\n\nวิธีใช้งานที่ถูกต้อง:\nกรุณาเปิดใช้งาน Web App บนเครื่องคอมพิวเตอร์ของคุณด้วยไฟล์ "start_tunnel.bat" หรือ "start_web.bat"\n(โหมดเครื่องรองรับไฟล์ขนาดใหญ่ 2GB - 5GB+ ได้ไม่จำกัด พร้อมประมวลผลด้วย GPU และ Whisper Large-v3 ได้เต็มสปีดครับ)`);
                 return;
             }
 
@@ -1163,69 +1184,101 @@ INDEX_HTML = """<!DOCTYPE html>
             startBtn.disabled = true;
             progressBox.style.display = 'block';
             progressBar.style.width = '0%';
-            progressStatus.innerText = 'กำลังอัปโหลดวิดีโอ (0%)...';
+            progressStatus.innerText = 'กำลังเตรียมอัปโหลดวิดีโอ (0%)...';
 
-            // Upload via XMLHttpRequest to report smooth, real-time upload progress
-            const xhr = new XMLHttpRequest();
-            const uploadUrl = `/api/upload?filename=${encodeURIComponent(currentFile.name)}`;
-            xhr.open('POST', uploadUrl, true);
-            xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+            const CHUNK_SIZE = 10 * 1024 * 1024; // 10 MB per chunk (well within Cloudflare 100MB limit)
+            const totalChunks = Math.ceil(currentFile.size / CHUNK_SIZE);
 
-            xhr.upload.onprogress = (e) => {
-                if (e.lengthComputable) {
-                    const pct = Math.round((e.loaded / e.total) * 100);
-                    progressBar.style.width = `${Math.min(99, pct)}%`;
-                    progressStatus.innerText = `กำลังอัปโหลดวิดีโอ (${pct}%)...`;
-                }
-            };
+            try {
+                if (totalChunks <= 1) {
+                    // Single chunk upload using standard /api/upload
+                    await new Promise((resolve, reject) => {
+                        const xhr = new XMLHttpRequest();
+                        const uploadUrl = `/api/upload?filename=${encodeURIComponent(currentFile.name)}`;
+                        xhr.open('POST', uploadUrl, true);
+                        xhr.setRequestHeader('Content-Type', 'application/octet-stream');
 
-            xhr.onload = async () => {
-                if (xhr.status === 200) {
-                    try {
-                        const uploadData = JSON.parse(xhr.responseText);
-                        if (!uploadData.success) throw new Error(uploadData.error || 'Upload failed');
-                        currentTaskId = uploadData.task_id;
-                        progressStatus.innerText = 'อัปโหลดสำเร็จ กำลังเริ่มต้นขั้นตอนถอดเสียง...';
+                        xhr.upload.onprogress = (e) => {
+                            if (e.lengthComputable) {
+                                const pct = Math.round((e.loaded / e.total) * 100);
+                                progressBar.style.width = `${Math.min(99, pct)}%`;
+                                progressStatus.innerText = `กำลังอัปโหลดวิดีโอ (${pct}%)...`;
+                            }
+                        };
 
-                        // Trigger processing
-                        await fetch('/api/process', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                task_id: currentTaskId,
-                                model_size: document.getElementById('modelSelect').value,
-                                source_lang: document.getElementById('langSelect').value,
-                                translation_style: document.getElementById('styleSelect').value,
-                                gemini_model: document.getElementById('geminiModelSelect').value,
-                                gemini_api_key: document.getElementById('geminiKey').value.trim(),
-                                embed_mode: document.getElementById('embedModeSelect') ? document.getElementById('embedModeSelect').value : 'burn'
-                            })
-                        });
+                        xhr.onload = async () => {
+                            if (xhr.status === 200) {
+                                try {
+                                    const uploadData = JSON.parse(xhr.responseText);
+                                    if (!uploadData.success) throw new Error(uploadData.error || 'Upload failed');
+                                    currentTaskId = uploadData.task_id;
+                                    await triggerProcessing(currentTaskId);
+                                    resolve();
+                                } catch (err) {
+                                    reject(err);
+                                }
+                            } else if (xhr.status === 413) {
+                                reject(new Error('ไฟล์มีขนาดเกินกำหนด (HTTP 413) กรุณาใช้ start_tunnel.bat หรือ start_web.bat เพื่ออัปโหลดไฟล์ขนาดใหญ่'));
+                            } else {
+                                reject(new Error('การอัปโหลดล้มเหลว HTTP ' + xhr.status));
+                            }
+                        };
 
-                        pollProgress(currentTaskId);
-                    } catch (err) {
-                        alert('เกิดข้อผิดพลาด: ' + err.message);
-                        startBtn.disabled = false;
-                        progressBox.style.display = 'none';
-                    }
-                } else if (xhr.status === 413) {
-                    alert('การอัปโหลดล้มเหลว (HTTP 413 Payload Too Large)\n\nไฟล์มีขนาดเกิน 4.5 MB ที่ Vercel Serverless กำหนดไว้\n\nวิธีแก้ไขเพื่อใช้งานไฟล์เต็ม:\nกรุณารัน Web App ในเครื่องคอมพิวเตอร์ของคุณผ่านไฟล์ "start_web.bat" หรือรันคำสั่ง "python app.py" เพื่อใช้งานไฟล์ขนาดใหญ่ได้ไม่จำกัดและรัน Whisper Large-v3 ได้เต็มที่ครับ');
-                    startBtn.disabled = false;
-                    progressBox.style.display = 'none';
+                        xhr.onerror = () => reject(new Error('การเชื่อมต่อล้มเหลวระหว่างอัปโหลด'));
+                        xhr.send(currentFile);
+                    });
                 } else {
-                    alert('การอัปโหลดล้มเหลว HTTP ' + xhr.status);
-                    startBtn.disabled = false;
-                    progressBox.style.display = 'none';
-                }
-            };
+                    // Multi-chunk sequential upload for 2GB - 5GB+ files
+                    let uploadTaskId = '';
+                    for (let chunkIdx = 0; chunkIdx < totalChunks; chunkIdx++) {
+                        const start = chunkIdx * CHUNK_SIZE;
+                        const end = Math.min(currentFile.size, start + CHUNK_SIZE);
+                        const chunkBlob = currentFile.slice(start, end);
 
-            xhr.onerror = () => {
-                alert('การเชื่อมต่อล้มเหลวระหว่างอัปโหลด');
+                        const queryParams = new URLSearchParams({
+                            filename: currentFile.name,
+                            chunk_index: chunkIdx.toString(),
+                            total_chunks: totalChunks.toString(),
+                            total_size: currentFile.size.toString(),
+                        });
+                        if (uploadTaskId) {
+                            queryParams.set('task_id', uploadTaskId);
+                        }
+
+                        // Upload chunk with retry up to 3 times
+                        let success = false;
+                        for (let attempt = 1; attempt <= 3; attempt++) {
+                            try {
+                                const res = await fetch(`/api/upload_chunk?${queryParams.toString()}`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/octet-stream' },
+                                    body: chunkBlob
+                                });
+                                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                                const data = await res.json();
+                                if (!data.success) throw new Error(data.error || 'Chunk upload failed');
+                                if (data.task_id) uploadTaskId = data.task_id;
+                                success = true;
+                                break;
+                            } catch (e) {
+                                if (attempt === 3) throw e;
+                                await new Promise(r => setTimeout(r, 1000));
+                            }
+                        }
+
+                        const pct = Math.round(((chunkIdx + 1) / totalChunks) * 100);
+                        progressBar.style.width = `${Math.min(99, pct)}%`;
+                        progressStatus.innerText = `กำลังอัปโหลดวิดีโอ (${pct}%) [ชิ้นที่ ${chunkIdx + 1}/${totalChunks}]...`;
+                    }
+
+                    currentTaskId = uploadTaskId;
+                    await triggerProcessing(currentTaskId);
+                }
+            } catch (err) {
+                alert('เกิดข้อผิดพลาด: ' + err.message);
                 startBtn.disabled = false;
                 progressBox.style.display = 'none';
-            };
-
-            xhr.send(currentFile);
+            }
         }
 
         function pollProgress(taskId) {
@@ -1737,6 +1790,73 @@ class AppRequestHandler(BaseHTTPRequestHandler):
                     "status_message": "อัปโหลดเสร็จสมบูรณ์",
                 }
             self.send_json({"success": True, "task_id": task_id, "filename": safe_filename})
+            return
+
+        if path == "/api/upload_chunk":
+            raw_filename = query.get("filename", ["video.mp4"])[0]
+            safe_filename = os.path.basename(raw_filename).replace(" ", "_")
+            if not safe_filename:
+                safe_filename = "video.mp4"
+
+            task_id = query.get("task_id", [""])[0]
+            if not task_id:
+                task_id = str(uuid.uuid4())[:8]
+
+            try:
+                chunk_index = int(query.get("chunk_index", [0])[0])
+                total_chunks = int(query.get("total_chunks", [1])[0])
+            except (ValueError, TypeError):
+                self.send_json({"success": False, "error": "Invalid chunk indices"}, 400)
+                return
+
+            task_dir = os.path.join(UPLOAD_DIR, task_id)
+            os.makedirs(task_dir, exist_ok=True)
+            part_path = os.path.join(task_dir, safe_filename + ".part")
+            saved_path = os.path.join(task_dir, safe_filename)
+
+            content_length = int(self.headers.get("Content-Length", 0))
+            mode = "wb" if chunk_index == 0 else "ab"
+            remaining = content_length
+            with open(part_path, mode) as f:
+                while remaining > 0:
+                    chunk = self.rfile.read(min(remaining, 65536))
+                    if not chunk:
+                        break
+                    f.write(chunk)
+                    remaining -= len(chunk)
+
+            # Check if this was the final chunk
+            if chunk_index >= total_chunks - 1:
+                if os.path.isfile(saved_path):
+                    try:
+                        os.remove(saved_path)
+                    except Exception:
+                        pass
+                os.replace(part_path, saved_path)
+
+                with tasks_lock:
+                    tasks[task_id] = {
+                        "task_id": task_id,
+                        "video_path": saved_path,
+                        "filename": safe_filename,
+                        "state": "uploaded",
+                        "progress": 0.0,
+                        "status_message": "อัปโหลดเสร็จสมบูรณ์",
+                    }
+                self.send_json({
+                    "success": True,
+                    "completed": True,
+                    "task_id": task_id,
+                    "filename": safe_filename,
+                })
+                return
+
+            self.send_json({
+                "success": True,
+                "completed": False,
+                "task_id": task_id,
+                "chunk_index": chunk_index,
+            })
             return
 
         content_len = int(self.headers.get("Content-Length", 0))
