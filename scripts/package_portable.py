@@ -134,6 +134,10 @@ def package_portable():
         if len(zf.infolist()) > 20:
             print(f"  ... and {len(zf.infolist()) - 20} more files.")
     print("=" * 60)
+    # Clean up staging directory so dist/ remains lean and does not bloat Tauri frontendDist
+    if STAGING_DIR.exists():
+        shutil.rmtree(STAGING_DIR, ignore_errors=True)
+        print("Cleaned up staging directory.")
     return str(ZIP_OUTPUT)
 
 
