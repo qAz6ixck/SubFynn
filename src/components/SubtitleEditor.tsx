@@ -74,12 +74,12 @@ export const SubtitleEditor: React.FC<SubtitleEditorProps> = ({
           </div>
           <div>
             <h2 className="text-sm font-semibold tracking-wide text-content-white uppercase flex items-center gap-2">
-              Interactive Subtitle Editor
+              Subtitle Editor
             </h2>
             <p className="text-xs text-content-dim font-mono">
               {segments.length > 0
-                ? `Showing ${filteredSegments.length} of ${segments.length} segments`
-                : 'No subtitle segments loaded yet'}
+                ? `${filteredSegments.length} of ${segments.length} lines`
+                : 'No subtitles loaded'}
             </p>
           </div>
         </div>
@@ -93,7 +93,7 @@ export const SubtitleEditor: React.FC<SubtitleEditorProps> = ({
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search source, Thai, or timecode..."
+              placeholder="Search text or timecode..."
               className="w-full bg-surface-input border border-border-input rounded-xl pl-9 pr-8 py-1.5 text-xs text-content-white placeholder-content-dim focus:outline-none focus:border-brand-indigo font-sans"
             />
             {searchQuery && (

@@ -172,15 +172,12 @@ export const App: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-base font-bold tracking-tight text-content-white font-sans">
-                  SubFynn Studio
+                  SubFynn
                 </h1>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-brand-indigo/20 border border-brand-indigo/35 text-brand-cyan uppercase tracking-wider">
                   v2.0
                 </span>
               </div>
-              <p className="text-[11px] text-content-dim font-sans">
-                AI Speech-to-Text & Thai Translation Studio (Tauri v2 + Python Engine)
-              </p>
             </div>
           </div>
 
@@ -276,8 +273,8 @@ export const App: React.FC = () => {
 
         {/* Footer */}
         <footer className="py-2 flex items-center justify-between text-xs text-content-dim font-mono border-t border-border-glass mt-auto">
-          <span>SubFynn Rebuild • Tauri v2 + Faster-Whisper + Gemini</span>
-          <span>Theme: #23212C Glassmorphic • Zero Emojis</span>
+          <span>SubFynn • AI Thai Subtitles</span>
+          <span>v2.0</span>
         </footer>
       </div>
     </div>

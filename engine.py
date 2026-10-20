@@ -168,7 +168,12 @@ def has_audio_stream(file_path: str, ffmpeg_path: Optional[str] = None) -> bool:
     return "Audio:" in err_text
 
 
-def extract_audio(video_path: str, output_wav_path: str, ffmpeg_path: Optional[str] = None) -> Optional[str]:
+def extract_audio(
+    video_path: str,
+    output_wav_path: str,
+    ffmpeg_path: Optional[str] = None,
+    progress_callback: Optional[Callable[[float, str], None]] = None,
+) -> Optional[str]:
     """
     Extract 16kHz mono 16-bit PCM WAV audio from video file.
     Returns output_wav_path if successful, or None if the video has no audio track.
@@ -194,19 +199,40 @@ def extract_audio(video_path: str, output_wav_path: str, ffmpeg_path: Optional[s
         os.path.abspath(output_wav_path),
     ]
 
-    result = subprocess.run(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        encoding="utf-8",
-        errors="replace",
-        creationflags=CREATE_NO_WINDOW,
-    )
-    if result.returncode != 0:
-        err_msg = (result.stderr or "")[-500:]
-        if "Output file does not contain any stream" in err_msg or "matches no streams" in err_msg:
-            return None
-        raise RuntimeError(f"FFmpeg error while extracting audio: {err_msg}")
+    if progress_callback:
+        proc = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            creationflags=CREATE_NO_WINDOW,
+        )
+        t_start = time.time()
+        while proc.poll() is None:
+            time.sleep(0.5)
+            elapsed = time.time() - t_start
+            sub_pct = min(27.0, 10.0 + elapsed * 1.5)
+            progress_callback(round(sub_pct, 1), f"กำลังแยกเสียงจากวิดีโอ... ({int(elapsed)}s)")
+        stdout_bytes, stderr_bytes = proc.communicate()
+        stderr_text = stderr_bytes.decode("utf-8", errors="replace") if stderr_bytes else ""
+        if proc.returncode != 0:
+            err_msg = stderr_text[-500:]
+            if "Output file does not contain any stream" in err_msg or "matches no streams" in err_msg:
+                return None
+            raise RuntimeError(f"FFmpeg error while extracting audio: {err_msg}")
+    else:
+        result = subprocess.run(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            encoding="utf-8",
+            errors="replace",
+            creationflags=CREATE_NO_WINDOW,
+        )
+        if result.returncode != 0:
+            err_msg = (result.stderr or "")[-500:]
+            if "Output file does not contain any stream" in err_msg or "matches no streams" in err_msg:
+                return None
+            raise RuntimeError(f"FFmpeg error while extracting audio: {err_msg}")
 
     if not os.path.isfile(output_wav_path) or os.path.getsize(output_wav_path) == 0:
         raise RuntimeError("การแยกเสียงล้มเหลว ไฟล์เสียงมีขนาด 0 ไบต์")
@@ -1131,7 +1157,7 @@ def process_video_subtitles(
 
     # Step 1: Extract audio
     report(10.0, "กำลังแยกเสียงจากวิดีโอ (Extracting audio)...")
-    extracted_wav = extract_audio(video_path, wav_path, ffmpeg_path=ffmpeg)
+    extracted_wav = extract_audio(video_path, wav_path, ffmpeg_path=ffmpeg, progress_callback=report)
 
     if not extracted_wav:
         # Video has no audio track
@@ -1156,9 +1182,11 @@ def process_video_subtitles(
             "message": "วิดีโอนี้ไม่มีแทร็กเสียง (No audio stream detected in video)",
         }
 
+    report(28.0, "แยกเสียงสำเร็จ กำลังโหลดโมเดล Whisper...")
     # Step 2: Transcribe with Whisper (Auto-detect CUDA for fast inference with safe probe)
-    report(30.0, f"กำลังโหลดโมเดล Whisper ({model_size}) และถอดเสียง...")
+    report(30.0, f"กำลังโหลดโมเดล Whisper ({model_size})...")
     model = load_whisper_model_safely(model_size)
+    report(33.0, "กำลังสแกนและถอดเสียงพูด...")
 
     lang_param = None
     if source_lang and source_lang.lower() not in ("auto", "none", ""):

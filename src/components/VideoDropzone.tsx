@@ -69,17 +69,14 @@ export const VideoDropzone: React.FC<VideoDropzoneProps> = ({
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold uppercase tracking-wider text-brand-cyan flex items-center gap-1">
+                <span className="text-xs font-semibold tracking-wider text-brand-cyan flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5 text-brand-emerald" />
-                  Target Video Selected
+                  Video Loaded
                 </span>
               </div>
               <h3 className="text-sm font-medium text-content-white truncate mt-0.5" title={selectedVideo}>
                 {getFileName(selectedVideo)}
               </h3>
-              <p className="text-xs text-content-dim font-mono truncate mt-0.5" title={selectedVideo}>
-                {selectedVideo}
-              </p>
             </div>
           </div>
 
@@ -113,10 +110,10 @@ export const VideoDropzone: React.FC<VideoDropzoneProps> = ({
             <UploadCloud className="w-7 h-7 text-content-dim group-hover:text-brand-cyan transition-colors" />
           </div>
           <p className="text-sm font-medium text-content-white group-hover:text-brand-cyan transition-colors">
-            Drag & Drop video file here, or click to browse
+            Drag & drop video here, or click to browse
           </p>
           <p className="text-xs text-content-dim mt-1 font-mono">
-            Supports MP4, MKV, AVI, MOV, WEBM (bundled FFmpeg 9.0)
+            MP4, MKV, AVI, MOV, WEBM
           </p>
         </div>
       )}

@@ -156,8 +156,9 @@ def rpc_process_video(
         output_dir = os.path.dirname(abs_video)
     abs_out_dir = os.path.abspath(output_dir)
 
-    model_size = params.get("model_size", "large-v3")
-    source_lang = params.get("source_lang")
+    default_model = "large-v3" if engine.check_cuda_availability() else "base"
+    model_size = params.get("model_size") or params.get("whisper_model") or default_model
+    source_lang = params.get("source_lang") or params.get("audio_language")
     gemini_api_key = params.get("gemini_api_key")
     gemini_model = params.get("gemini_model", "gemini-2.5-flash")
     translation_style = params.get("translation_style", "jav")

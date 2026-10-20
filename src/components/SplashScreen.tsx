@@ -53,10 +53,10 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
 
             {/* Typography */}
             <h1 className="mt-6 text-2xl font-bold tracking-tight text-content-white font-sans">
-              SubFynn Studio
+              SubFynn
             </h1>
             <p className="mt-1 text-xs text-content-muted font-sans tracking-wide">
-              AI Thai Subtitle Studio (Tauri v2 Desktop)
+              AI Thai Subtitles
             </p>
 
             {/* Progress / Status Section */}
@@ -78,10 +78,6 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
                   transition={{ duration: 0.35 }}
                 />
               </div>
-            </div>
-
-            <div className="mt-6 text-[11px] text-content-dim font-mono tracking-wider">
-              Whisper Large-v3 • Gemini Live Translate
             </div>
           </motion.div>
         </motion.div>

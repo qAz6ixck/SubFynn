@@ -194,9 +194,11 @@ export function useTauriIpc() {
           const result = await invoke<PipelineResult>('start_pipeline', {
             options: {
               video_path: videoPath,
+              model_size: config.whisperModel,
               whisper_model: config.whisperModel,
               gemini_model: config.geminiModel,
               translation_style: config.translationStyle,
+              source_lang: config.audioLanguage,
               audio_language: config.audioLanguage,
               gemini_api_key: config.geminiApiKey,
             },
